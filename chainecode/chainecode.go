@@ -115,10 +115,21 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 		if err != nil {
 			return nil, err
 		}
+
 	} else {
 		return nil, errors.New("Exepect value of " + key1 + " equal 0", )
 	}
+	tosend := "Change " + key2 + " to " + value2
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	}
 
+	tosend = "Change " + key1 + " to " + value1
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
 
