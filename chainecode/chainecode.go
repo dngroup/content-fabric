@@ -127,11 +127,11 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 		return nil, err
 	}
 
-	tosend = "Change " + key1 + " to " + value1
-	err = stub.SetEvent("evtsender", []byte(tosend))
-	if err != nil {
-		return nil, err
-	}
+	//tosend = "Change " + key1 + " to " + value1
+	//err = stub.SetEvent("evtsender", []byte(tosend))
+	//if err != nil {
+	//	return nil, err
+	//}
 	return nil, nil
 }
 // move - invoke function to write key/value pair
