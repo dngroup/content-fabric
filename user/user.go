@@ -156,7 +156,9 @@ func change(valueAnalyse string, valueChange string, restAddress string, chainco
 
 	payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"invoke\", \"params\": { \"type\": 1, \"chaincodeID\": { \"name\": \"" +
 		chaincodeID +
-		"\" }, \"ctorMsg\": { \"function\": \"write\", \"args\": [ \"" +
+		"\" }, \"ctorMsg\": { \"function\": \"" +
+		"move" +
+		"\", \"args\": [ \"" +
 		valueAnalyse +
 		"\", \"" +
 		"0"+

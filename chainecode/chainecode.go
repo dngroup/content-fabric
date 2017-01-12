@@ -62,6 +62,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Init(stub, "init", args)
 	} else if function == "write" {
 		return t.write(stub, args)
+	} else if function == "move" {
+		return t.move(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function) //error
 
@@ -87,11 +89,11 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	return nil, errors.New("Received unknown function query: " + function)
 }
 
-// write - invoke function to write key/value pair
-func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+// move - invoke function to write key/value pair
+func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key1, value1, key2, value2 string
 	var err error
-	fmt.Println("Runing write")
+	fmt.Println("Runing move")
 	if len(args) != 4 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 4. name of the key and value to set both")
 	}
@@ -126,6 +128,30 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	}
 
 	tosend = "Change " + key1 + " to " + value1
+	err = stub.SetEvent("evtsender", []byte(tosend))
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+// move - invoke function to write key/value pair
+func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var key1, value1 string
+	var err error
+	fmt.Println("Runing write")
+	if len(args) != 4 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+	}
+
+	key1 = args[0] //rename for fun
+	value1 = args[1]
+
+	err = stub.PutState(key1, []byte(value1)) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+
+	tosend := "Change " + key1 + " to " + value1
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
