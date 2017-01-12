@@ -5,7 +5,8 @@ docker stop ab bc cd de da
 docker rm ab bc cd de da
 
 ADDR=172.17.0.1
-echo "Load chaincode"
+echo "Load  the chaincode and get the id of this"
+# you have to edit the path if you fork this repository
 CHAINCODEID=$(curl --request POST \
   --url http://localhost:7050/chaincode \
   --header 'content-type: application/json' \
