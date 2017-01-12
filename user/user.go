@@ -102,20 +102,20 @@ func main() {
 
 	for {
 		select {
-		//case b := <-a.notfy:
-		//	fmt.Printf("\n")
-		//	fmt.Printf("\n")
-		//	fmt.Printf("Received block\n")
-		//	fmt.Printf("--------------\n")
-		//	for _, r := range b.Block.Transactions {
-		//		fmt.Printf("Transaction:\n\t[%v]\n", r)
-		//	}
-		//case r := <-a.rejected:
-		//	fmt.Printf("\n")
-		//	fmt.Printf("\n")
-		//	fmt.Printf("Received rejected transaction\n")
-		//	fmt.Printf("--------------\n")
-		//	fmt.Printf("Transaction error:\n%s\t%s\n", r.Rejection.Tx.Txid, r.Rejection.ErrorMsg)
+		case b := <-a.notfy:
+			fmt.Printf("\n")
+			fmt.Printf("\n")
+			fmt.Printf("Received block\n")
+			fmt.Printf("--------------\n")
+			for _, r := range b.Block.Transactions {
+				fmt.Printf("Transaction:\n\t[%v]\n", r)
+			}
+		case r := <-a.rejected:
+			fmt.Printf("\n")
+			fmt.Printf("\n")
+			fmt.Printf("Received rejected transaction\n")
+			fmt.Printf("--------------\n")
+			fmt.Printf("Transaction error:\n%s\t%s\n", r.Rejection.Tx.Txid, r.Rejection.ErrorMsg)
 		case ce := <-a.cEvent:
 			fmt.Printf("\n")
 			fmt.Printf("\n")
@@ -131,8 +131,8 @@ func main() {
 
 //analyse what is the value as change
 func analyse(event *pb.Event_ChaincodeEvent, valueAnalyse string) bool {
-
-	value := event.ChaincodeEvent.String()
+	var totest,toCompar string
+	value := event.ChaincodeEvent.Payload
 	//TODO: may be in json is better
 	//var dat map[string]interface{}
 	//if err := json.Unmarshal(value, &dat); err != nil {
@@ -141,10 +141,17 @@ func analyse(event *pb.Event_ChaincodeEvent, valueAnalyse string) bool {
 	//fmt.Println(dat)
 	//num := dat["Value"]
 	
-	//verfie if the value
-	if value == "Change " + valueAnalyse+" to 1" {
+	//verify if the value
+	totest = string(value)
+	toCompar = valueAnalyse+"->1"
+	fmt.Printf("\n(%s) is equal \n(%s) ?\n", totest,toCompar)
+	if totest ==  toCompar{
+			fmt.Printf("True :)\n", totest,toCompar)
+
 		return true
 	} else {
+			fmt.Printf("False :(\n", totest,toCompar)
+
 		return false
 	}
 

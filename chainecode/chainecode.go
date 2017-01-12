@@ -121,7 +121,7 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 	} else {
 		return nil, errors.New("Exepect value of " + key1 + " equal 0", )
 	}
-	tosend := "Change " + key2 + " to " + value2
+	tosend := key2 + "->" + value2
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	var key1, value1 string
 	var err error
 	fmt.Println("Runing write")
-	if len(args) != 4 {
+	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
 	}
 
@@ -152,7 +152,7 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 		return nil, err
 	}
 
-	tosend := "Change " + key1 + " to " + value1
+	tosend := key1 + "->" + value1
 	err = stub.SetEvent("evtsender", []byte(tosend))
 	if err != nil {
 		return nil, err
