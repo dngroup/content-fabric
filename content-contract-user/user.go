@@ -11,12 +11,12 @@ import (
 )
 
 type UserContract struct {
-	userId        string    `json:"userID"`
-	contentId     string    `json:"contentID"`
+	UserId        string    `json:"userID"`
+	ContentId     string    `json:"contentID"`
 	//time max after the request is deleted
-	timestampMax  int64     `json:"timestampMax"`
+	TimestampMax  int64     `json:"timestampMax"`
 	//use for stat
-	timestampUser int64     `json:"timestampUser"`
+	TimestampUser int64     `json:"timestampUser"`
 }
 
 func main() {
@@ -31,22 +31,30 @@ func main() {
 
 	flag.StringVar(&userId, "userId", "user", "the userId of the user")
 	flag.StringVar(&contentId, "contentId", "content", "the contentId of the content")
-	flag.StringVar(&timeMax, "time-max", 10, "the timestamp max to get start the video allow by the user of the content default to 10s")
+	flag.IntVar(&timeMax, "time-max", 10, "the timestamp max to get start the video allow by the user of the content default to 10s")
 	flag.Parse()
 
 	fmt.Printf("Create a new contract for %s\n", userId)
 
 	//creat the new contract
-	contract := &UserContract{
-		userId:userId,
-		contentId:contentId,
-		timestampMax: time.Now().Add(time.Duration(timeMax) * time.Second).Unix(),
-		timestampUser: time.Now().Unix()}
+	contract := UserContract{
+		userId,
+		contentId,
+		time.Now().Add(time.Duration(timeMax) * time.Second).Unix(),
+		time.Now().Unix()}
+	fmt.Println("-----------------------------Raw-Object----------------------------")
+	fmt.Println(contract)
 	//convert to json
-	contractJson, _ := json.Marshal(contract)
+	contractJson, err := json.Marshal(contract)
+	if (err != nil){
+		return
+	}
+	fmt.Println("----------------------------JSON-Object----------------------------")
+	fmt.Println("len:", len(contractJson))
 	// use this format to enable the json on the payload json
 	contractOnJson := strings.Replace(string(contractJson), "\"", "\\\"", -1)
-
+	fmt.Println("----------------------------JSON-Object----------------------------")
+	fmt.Println(string(contractOnJson))
 	//create the request
 	url := "http://" + restAddress + "/chaincode"
 
@@ -65,6 +73,9 @@ func main() {
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
+	fmt.Println("--------------------------------SEND--------------------------------")
+	fmt.Println(payload)
+	fmt.Println("-------------------------------RECIVE-------------------------------")
 	fmt.Println(res)
 	fmt.Println(string(body))
 

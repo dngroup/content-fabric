@@ -34,17 +34,27 @@ type SimpleChaincode struct {
 }
 
 type UserContract struct {
-	userId             string    `json:"userID"`
-	contentId          string    `json:"contentID"`
+	UserId        string    `json:"userID"`
+	ContentId     string    `json:"contentID"`
 	//time max after the request is deleted
-	timestampMax       int64     `json:"timestampMax"`
+	TimestampMax  int64     `json:"timestampMax"`
+	//use for stat
+	TimestampUser int64     `json:"timestampUser"`
+}
+
+
+type UserContractForCP struct {
+	UserId             string    `json:"userID"`
+	ContentId          string    `json:"contentID"`
+	//time max after the request is deleted
+	TimestampMax       int64     `json:"timestampMax"`
 	//sha of user massage
-	shaUser            string    `json:"sha_user"`
+	ShaUser            string    `json:"sha_user"`
 	// random int
-	random63           int64     `json:"random63"`
+	Random63           int64     `json:"random63"`
 	//use for state
-	timestampUser      int64     `json:"timestampUser"`
-	timestampBrokering int64     `json:"timestampBrokering"`
+	TimestampUser      int64     `json:"timestampUser"`
+	TimestampBrokering int64     `json:"timestampBrokering"`
 }
 type EventContract struct {
 	typeContract string    `json:"typeContract"`
@@ -162,37 +172,45 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 // write - invoke function to write key/value pair
 func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
-	var dat map[string]interface{}
+	//var dat map[string]interface{}
 	var err error
 	fmt.Println("Runing write")
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1. name of the key and value to set")
 	}
+	fmt.Println("--------------Reception-contract--------------")
+	fmt.Println(args[0])
 
-	if err := json.Unmarshal([]byte(args[0]), &dat); err != nil {
+
+	userContract := UserContract{}
+	if err := json.Unmarshal([]byte(args[0]), &userContract); err != nil {
 		panic(err)
 	}
 	shaByte := sha256.Sum256([]byte(args[0]))
 	shaUser := base64.StdEncoding.EncodeToString(shaByte[:])
-	userId := dat["userId"].(string)
-	contentId := dat["contentId"].(string)
-	timestampMax := dat["timestampMax"].(int64)
-	timestampUser := dat["timestampUser"].(int64)
+	fmt.Println("--------------contract-json-to-object--------------")
+	fmt.Println(args[0])
+
+
+	//userId := dat["userId"].(string)
+	//contentId := dat["contentId"].(string)
+	//timestampMax := dat["timestampMax"].(int64)
+	//timestampUser := dat["timestampUser"].(int64)
 	timestamp := time.Now().Unix()
 	//verify if the contract is correct
-	if timestamp >= timestampMax {
-		return nil, errors.New("Contract to old " + time.Unix(timestampMax, 0).String() + ". " +
+	if timestamp >= userContract.TimestampMax {
+		return nil, errors.New("Contract to old " + time.Unix(userContract.TimestampMax, 0).String() + ". " +
 			"Curent chainecode date " + time.Unix(timestamp, 0).String())
 	}
 
-	contract := &UserContract{
-		userId: userId,
-		contentId: contentId,
-		shaUser: shaUser,
-		random63:rand.Int63(),
-		timestampMax:   timestampMax,
-		timestampUser: timestampUser,
-		timestampBrokering: timestampUser}
+	contract := &UserContractForCP{
+		UserId: userContract.UserId,
+		ContentId: userContract.ContentId,
+		ShaUser: shaUser,
+		Random63:rand.Int63(),
+		TimestampMax:   userContract.TimestampMax,
+		TimestampUser: userContract.TimestampUser,
+		TimestampBrokering: timestamp}
 	contractJson, _ := json.Marshal(contract)
 	shaByte = sha256.Sum256(contractJson)
 	shaContract := base64.StdEncoding.EncodeToString(shaByte[:])
@@ -203,7 +221,7 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 
 	event := &EventContract{
 		typeContract:"User",
-		Id:contentId,
+		Id:userContract.ContentId,
 		sha:shaContract}
 	tosend, _ := json.Marshal(event)
 	err = stub.SetEvent("evtsender", tosend)

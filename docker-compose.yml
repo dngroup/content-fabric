@@ -7,7 +7,7 @@ services:
       - CORE_PEER_ADDRESSAUTODETECT=true
       - CORE_VM_ENDPOINT=unix:///var/run/docker.sock
       - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft
-#      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_LOGGING_LEVEL=DEBUG
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: sh -c "peer node start "
