@@ -57,8 +57,8 @@ type UserContractForCP struct {
 	TimestampBrokering int64     `json:"timestampBrokering"`
 }
 type EventContract struct {
-	typeContract string    `json:"typeContract"`
-	sha          string    `json:"sha"`
+	TypeContract string    `json:"typeContract"`
+	Sha          string    `json:"sha"`
 	Id           string    `json:"ID"`
 }
 
@@ -220,9 +220,9 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	}
 
 	event := &EventContract{
-		typeContract:"User",
+		TypeContract:"User",
 		Id:userContract.ContentId,
-		sha:shaContract}
+		Sha:shaContract}
 	tosend, _ := json.Marshal(event)
 	err = stub.SetEvent("evtsender", tosend)
 	if err != nil {

@@ -11,6 +11,9 @@ import (
 	"strings"
 	"net/http"
 	"io/ioutil"
+	"encoding/json"
+	"math/rand"
+	"time"
 )
 
 type adapter struct {
@@ -19,6 +22,35 @@ type adapter struct {
 	cEvent             chan *pb.Event_ChaincodeEvent
 	listenToRejections bool
 	chaincodeID        string
+}
+
+type UserContractForCP struct {
+	UserId             string    `json:"userID"`
+	ContentId          string    `json:"contentID"`
+	//time max after the request is deleted
+	TimestampMax       int64     `json:"timestampMax"`
+	//sha of user massage
+	ShaUser            string    `json:"sha_user"`
+	// random int
+	Random63           int64     `json:"random63"`
+	//use for state
+	TimestampUser      int64     `json:"timestampUser"`
+	TimestampBrokering int64     `json:"timestampBrokering"`
+}
+type CPContract struct {
+	UserReturnID       string    `json:"userReturnID"`
+	ContentId          string    `json:"contentID"`
+	LicencingId        string    `json:"licencingID"`
+	//time max after the request is deleted
+	TimestampMax       int64     `json:"timestampMax"`
+	//sha of user massage
+	ShaUser            string    `json:"sha_user"`
+	// random int
+	Random63           int64     `json:"random63"`
+	//use for state
+	TimestampUser      int64     `json:"timestampUser"`
+	TimestampBrokering int64     `json:"timestampBrokering"`
+	TimestampCP        int64     `json:"timestampLicencing"`
 }
 
 //GetInterestedEvents implements consumer.EventAdapter interface for registering interested events
@@ -81,14 +113,12 @@ func main() {
 	var eventAddress string
 	var listenToRejections bool
 	var chaincodeID string
-	var valueAnalyse string
-	var valueChange string
+	var chaincodeIdToSend string
 	var restAddress string
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.BoolVar(&listenToRejections, "listen-to-rejections", false, "whether to listen to rejection events")
-	flag.StringVar(&chaincodeID, "events-from-chaincode", "", "listen to events from given chaincode")
-	flag.StringVar(&valueAnalyse, "value-to-analyse", "a", "listen this value and change the value to change")
-	flag.StringVar(&valueChange, "value-to-change", "b", "change this value")
+	flag.StringVar(&chaincodeID, "events-from-chaincode", "", "listen to events from given chaincode default listen all")
+	flag.StringVar(&chaincodeIdToSend, "send-to-chaincode", "", "send to given chaincode default equal as -events-from-chaincode")
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server")
 	flag.Parse()
 
@@ -98,6 +128,15 @@ func main() {
 	if a == nil {
 		fmt.Printf("Error creating event client\n")
 		return
+	}
+
+	//set default value to the same as events chaincode
+	if chaincodeIdToSend == "" {
+		if chaincodeID == "" {
+			fmt.Printf("No chaincode set\n")
+			return
+		}
+		chaincodeIdToSend = chaincodeID
 	}
 
 	for {
@@ -122,58 +161,74 @@ func main() {
 			fmt.Printf("Received chaincode event\n")
 			fmt.Printf("------------------------\n")
 			fmt.Printf("Chaincode Event:%v\n", ce)
-			if analyse(ce, valueAnalyse) {
-				change(valueAnalyse, valueChange, restAddress, chaincodeID)
+			userContractForCP := UserContractForCP{}
+			if analyse(ce, &userContractForCP) {
+				userReturnID := ce.ChaincodeEvent.TxID
+				createCPContract(userContractForCP, userReturnID, restAddress, chaincodeIdToSend)
 			}
 		}
 	}
 }
 
 //analyse what is the value as change
-func analyse(event *pb.Event_ChaincodeEvent, valueAnalyse string) bool {
-	var totest,toCompar string
-	value := event.ChaincodeEvent.Payload
-	//TODO: may be in json is better
-	//var dat map[string]interface{}
-	//if err := json.Unmarshal(value, &dat); err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println(dat)
-	//num := dat["Value"]
+func analyse(event *pb.Event_ChaincodeEvent, userContractForCP *UserContractForCP) bool {
 
-	//verify if the value
-	totest = string(value)
-	toCompar = valueAnalyse+"->1"
-	fmt.Printf("\n(%s) is equal \n(%s) ?\n", totest,toCompar)
-	if totest ==  toCompar{
-			fmt.Printf("True :)\n", totest,toCompar)
-
-		return true
-	} else {
-			fmt.Printf("False :(\n", totest,toCompar)
-
+	data := event.ChaincodeEvent.Payload
+	err := json.Unmarshal([]byte(data), &userContractForCP)
+	if err != nil {
+		fmt.Println("This is not for us")
 		return false
 	}
 
+	//verify if we have a licence for this content
+	//TODO: edit this value to have a real random
+	if (rand.Intn(10) < 0) {
+		fmt.Println("We don't have content")
+		return false
+	}
+
+	return true
+
 }
 
-func change(valueAnalyse string, valueChange string, restAddress string, chaincodeID string) {
+func createCPContract(userContractForCP UserContractForCP, userReturnID string, restAddress string, chaincodeID string) {
 
+	cPContract := CPContract{
+		TimestampMax:userContractForCP.TimestampMax,
+		Random63:userContractForCP.Random63,
+		ShaUser:userContractForCP.ShaUser,
+		TimestampBrokering:userContractForCP.TimestampBrokering,
+		TimestampUser:userContractForCP.TimestampUser,
+		UserReturnID:userReturnID,
+
+		ContentId:userContractForCP.ContentId,
+		LicencingId: userContractForCP.ContentId + ".lic",
+
+		TimestampCP:time.Now().Unix(),
+	}
+	fmt.Println("-----------------------------Raw-Object----------------------------")
+	fmt.Println(cPContract)
+	//convert to json
+	contractJson, err := json.Marshal(cPContract)
+	if (err != nil) {
+		return
+	}
+	fmt.Println("----------------------------JSON-Object----------------------------")
+	fmt.Println("len:", len(contractJson))
+	// use this format to enable the json on the payload json
+	contractOnJson := strings.Replace(string(contractJson), "\"", "\\\"", -1)
+	fmt.Println("----------------------------JSON-Object----------------------------")
+	fmt.Println(string(contractOnJson))
+	//create the request
 	url := "http://" + restAddress + "/chaincode"
 
 	payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"invoke\", \"params\": { \"type\": 1, \"chaincodeID\": { \"name\": \"" +
 		chaincodeID +
 		"\" }, \"ctorMsg\": { \"function\": \"" +
-		"move" +
+		"content-licencing-contract" +
 		"\", \"args\": [ \"" +
-		valueAnalyse +
-		"\", \"" +
-		"0"+
-		"\", \"" +
-		valueChange+
-		"\", \"" +
-		"1"+
-		"\" ] }, \"secureContext\": \"test_user0\" }, \"id\": 3}")
+		contractOnJson +
+		"\" ] } }, \"id\": 1}")
 
 	req, _ := http.NewRequest("POST", url, payload)
 
@@ -182,8 +237,9 @@ func change(valueAnalyse string, valueChange string, restAddress string, chainco
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
-
+	fmt.Println("--------------------------------SEND--------------------------------")
+	fmt.Println(payload)
+	fmt.Println("-------------------------------RECIVE-------------------------------")
 	fmt.Println(res)
 	fmt.Println(string(body))
-
 }
