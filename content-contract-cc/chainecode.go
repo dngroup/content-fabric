@@ -42,7 +42,6 @@ type UserContract struct {
 	TimestampUser int64     `json:"timestampUser"`
 }
 
-
 type UserContractForCP struct {
 	UserId             string    `json:"userID"`
 	ContentId          string    `json:"contentID"`
@@ -56,6 +55,43 @@ type UserContractForCP struct {
 	TimestampUser      int64     `json:"timestampUser"`
 	TimestampBrokering int64     `json:"timestampBrokering"`
 }
+type CPContract struct {
+	CPId               string    `json:"cPId"`
+	ContentId          string    `json:"contentID"`
+	LicencingId        string    `json:"licencingID"`
+	//time max after the request is deleted
+	TimestampMax       int64     `json:"timestampMax"`
+	//sha of user massage
+	ShaUser            string    `json:"sha_user"`
+	UserContractID     string    `json:"userContractID`
+	UserReturnID       string    `json:"userReturnID"`
+	// random int
+	Random63           int64     `json:"random63"`
+	//use for state
+	TimestampUser      int64     `json:"timestampUser"`
+	TimestampBrokering int64     `json:"timestampBrokering"`
+	TimestampCP        int64     `json:"TimestampCP"`
+}
+
+type CPContractForTE struct {
+	CPId               string    `json:"cPId"`
+	ContentId          string    `json:"contentID"`
+	LicencingId        string    `json:"licencingID"`
+	//time max after the request is deleted
+	TimestampMax       int64     `json:"timestampMax"`
+	//sha of user massage
+	ShaUser            string    `json:"sha_user"`
+	UserContractID     string    `json:"userContractID`
+	UserReturnID       string    `json:"userReturnID"`
+	// random int
+	Random63           int64     `json:"random63"`
+	//use for state
+	TimestampUser      int64     `json:"timestampUser"`
+	TimestampBrokering int64     `json:"timestampBrokering"`
+	TimestampCP        int64     `json:"timestampCP"`
+	TimestampLicencing int64     `json:"timestampLicencing"`
+}
+
 type EventContract struct {
 	TypeContract string    `json:"typeContract"`
 	Sha          string    `json:"sha"`
@@ -91,8 +127,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	if function == "init" {
 		//initialize the chaincode state, used as reset
 		return t.Init(stub, "init", args)
-	} else if function == "content-brockering-contract" {
-		return t.write(stub, args)
+	} else if function == "content-brokering-contract" {
+		return t.contentBrokeringContract(stub, args)
+	} else if function == "content-licencing-contract" {
+		return t.contentLicencingContract(stub, args)
 	}
 	//else if function == "content-licensing-contract" {
 	//		return t.licensing(stub, args)
@@ -169,8 +207,8 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 	return nil, nil
 }
 
-// write - invoke function to write key/value pair
-func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+// contentBrokeringContract - invoke function to write a new user contract after verify is correct
+func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
 	//var dat map[string]interface{}
 	var err error
@@ -178,9 +216,8 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1. name of the key and value to set")
 	}
-	fmt.Println("--------------Reception-contract--------------")
+	fmt.Println("██████████████████████████Reception-user-contract██████████████████████████")
 	fmt.Println(args[0])
-
 
 	userContract := UserContract{}
 	if err := json.Unmarshal([]byte(args[0]), &userContract); err != nil {
@@ -230,8 +267,73 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 	}
 	return nil, nil
 }
+// contentBrokeringContract - invoke function to write a new user contract after verify is correct
+func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
-// Read value
+	//var dat map[string]interface{}
+	var err error
+	fmt.Println("Runing write")
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1. name of the key and value to set")
+	}
+	fmt.Println("████████████████████████Reception-licencing-contract████████████████████████")
+	fmt.Println(args[0])
+
+	cPContract := CPContract{}
+	if err := json.Unmarshal([]byte(args[0]), &cPContract); err != nil {
+		panic(err)
+	}
+	shaByte := sha256.Sum256([]byte(args[0]))
+	shaUser := base64.StdEncoding.EncodeToString(shaByte[:])
+	fmt.Println("--------------contract-json-to-object--------------")
+	fmt.Println(args[0])
+
+
+	//userId := dat["userId"].(string)
+	//contentId := dat["contentId"].(string)
+	//timestampMax := dat["timestampMax"].(int64)
+	//timestampUser := dat["timestampUser"].(int64)
+	timestamp := time.Now().Unix()
+	//verify if the contract is correct
+	if timestamp >= cPContract.TimestampMax {
+		return nil, errors.New("Contract to old " + time.Unix(cPContract.TimestampMax, 0).String() + ". " +
+			"Curent chainecode date " + time.Unix(timestamp, 0).String())
+	}
+
+	contract := &CPContractForTE{
+		CPId: cPContract.CPId,
+		ContentId: cPContract.ContentId,
+		ShaUser: shaUser,
+		UserContractID:cPContract.UserContractID,
+		Random63:rand.Int63(),
+		TimestampMax:   cPContract.TimestampMax,
+		TimestampUser: cPContract.TimestampUser,
+		TimestampBrokering: cPContract.TimestampBrokering,
+		LicencingId:cPContract.LicencingId,
+		TimestampCP:cPContract.TimestampCP,
+		UserReturnID:cPContract.UserReturnID,
+		TimestampLicencing:timestamp}
+	contractJson, _ := json.Marshal(contract)
+	shaByte = sha256.Sum256(contractJson)
+	shaContract := base64.StdEncoding.EncodeToString(shaByte[:])
+	err = stub.PutState(shaContract, contractJson) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+
+	event := &EventContract{
+		TypeContract:"Licencing",
+		Id:cPContract.LicencingId,
+		Sha:shaContract}
+	tosend, _ := json.Marshal(event)
+	err = stub.SetEvent("evtsender", tosend)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+// Read Contract
 func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var key, jsonResp string
 	var err error

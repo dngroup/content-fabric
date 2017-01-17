@@ -61,7 +61,7 @@ func main() {
 	payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"invoke\", \"params\": { \"type\": 1, \"chaincodeID\": { \"name\": \"" +
 		chaincodeID +
 		"\" }, \"ctorMsg\": { \"function\": \"" +
-		"content-brockering-contract" +
+		"content-brokering-contract" +
 		"\", \"args\": [ \"" +
 		contractOnJson +
 		"\" ] } }, \"id\": 1}")
