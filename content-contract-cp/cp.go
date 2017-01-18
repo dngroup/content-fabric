@@ -7,7 +7,6 @@ import (
 
 	"github.com/hyperledger/fabric/events/consumer"
 	pb "github.com/hyperledger/fabric/protos"
-	"github.com/dngroup/content-fabric/content-contract-cc/common"
 	"strings"
 	"net/http"
 	"io/ioutil"
@@ -17,6 +16,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
+	"github.com/hyperledger/fabric/peer/common"
 )
 
 type adapter struct {
