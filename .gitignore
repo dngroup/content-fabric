@@ -133,3 +133,6 @@ fabric.properties
 /user/user
 /chainecode/chainecode
 .idea/
+/content-contract-user/content-contract-user
+/content-contract-cp/content-contract-cp
+/content-contract-te/content-contract-te
