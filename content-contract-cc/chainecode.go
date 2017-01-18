@@ -25,7 +25,7 @@ import (
 	"math/rand"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/dngroup/content-fabric/content-contract-common"
+	//"github.com/dngroup/content-fabric/content-contract-common"
 	"encoding/base64"
 )
 
@@ -33,7 +33,74 @@ import (
 type SimpleChaincode struct {
 }
 
-
+//type UserContract struct {
+//	UserId        string    `json:"userID"`
+//	ContentId     string    `json:"contentID"`
+//	//time max after the request is deleted
+//	TimestampMax  int64     `json:"timestampMax"`
+//	//use for stat
+//	TimestampUser int64     `json:"timestampUser"`
+//}
+//
+//type UserContractForCP struct {
+//	UserId             string    `json:"userID"`
+//	ContentId          string    `json:"contentID"`
+//	//time max after the request is deleted
+//	TimestampMax       int64     `json:"timestampMax"`
+//	//sha of user massage
+//	ShaUser            string    `json:"sha_user"`
+//	// random int
+//	Random63           int64     `json:"random63"`
+//	//use for state
+//	TimestampUser      int64     `json:"timestampUser"`
+//	TimestampBrokering int64     `json:"timestampBrokering"`
+//}
+//type CPContract struct {
+//	CPId               string    `json:"cPId"`
+//	ContentId          string    `json:"contentID"`
+//	LicencingId        string    `json:"licencingID"`
+//	Price              float64   `json:"price"`
+//	PriceMax           float64   `json:"priceMax"`
+//	//time max after the request is deleted
+//	TimestampMax       int64     `json:"timestampMax"`
+//	//sha of user massage
+//	ShaUser            string    `json:"sha_user"`
+//	UserContractID     string    `json:"userContractID`
+//	UserReturnID       string    `json:"userReturnID"`
+//	// random int
+//	Random63           int64     `json:"random63"`
+//	//use for state
+//	TimestampUser      int64     `json:"timestampUser"`
+//	TimestampBrokering int64     `json:"timestampBrokering"`
+//	TimestampCP        int64     `json:"TimestampCP"`
+//}
+//
+//type CPContractForTE struct {
+//	CPId               string    `json:"cPId"`
+//	ContentId          string    `json:"contentID"`
+//	LicencingId        string    `json:"licencingID"`
+//	Price              float64   `json:"price"`
+//	PriceMax           float64   `json:"priceMax"`
+//	//time max after the request is deleted
+//	TimestampMax       int64     `json:"timestampMax"`
+//	//sha of user massage
+//	ShaUser            string    `json:"sha_user"`
+//	UserContractID     string    `json:"userContractID`
+//	UserReturnID       string    `json:"userReturnID"`
+//	// random int
+//	Random63           int64     `json:"random63"`
+//	//use for state
+//	TimestampUser      int64     `json:"timestampUser"`
+//	TimestampBrokering int64     `json:"timestampBrokering"`
+//	TimestampCP        int64     `json:"timestampCP"`
+//	TimestampLicencing int64     `json:"timestampLicencing"`
+//}
+//
+//type EventContract struct {
+//	TypeContract string    `json:"typeContract"`
+//	Sha          string    `json:"sha"`
+//	Id           string    `json:"ID"`
+//}
 
 // ============================================================================================================================
 // Main
@@ -156,7 +223,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 	fmt.Println("██████████████████████████Reception-user-contract██████████████████████████")
 	fmt.Println(args[0])
 
-	userContract := content_contract_common.UserContract{}
+	userContract := UserContract{}
 	if err := json.Unmarshal([]byte(args[0]), &userContract); err != nil {
 		panic(err)
 	}
@@ -177,7 +244,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 			"Curent chainecode date " + time.Unix(timestamp, 0).String())
 	}
 
-	contract := &content_contract_common.UserContractForCP{
+	contract := &UserContractForCP{
 		UserId: userContract.UserId,
 		ContentId: userContract.ContentId,
 		ShaUser: shaUser,
@@ -193,7 +260,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 		return nil, err
 	}
 
-	event := &content_contract_common.EventContract{
+	event := &EventContract{
 		TypeContract:"User",
 		Id:userContract.ContentId,
 		Sha:shaContract}
@@ -216,7 +283,7 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 	fmt.Println("████████████████████████Reception-licencing-contract████████████████████████")
 	fmt.Println(args[0])
 
-	cPContract := content_contract_common.CPContract{}
+	cPContract := CPContract{}
 	if err := json.Unmarshal([]byte(args[0]), &cPContract); err != nil {
 		panic(err)
 	}
@@ -237,7 +304,7 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 			"Curent chainecode date " + time.Unix(timestamp, 0).String())
 	}
 
-	contract := &content_contract_common.CPContractForTE{
+	contract := &CPContractForTE{
 		CPId: cPContract.CPId,
 		ContentId: cPContract.ContentId,
 		ShaUser: shaUser,
@@ -260,7 +327,7 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 		return nil, err
 	}
 
-	event := &content_contract_common.EventContract{
+	event := &EventContract{
 		TypeContract:"Licencing",
 		Id:cPContract.LicencingId,
 		Sha:shaContract}
@@ -276,67 +343,67 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
 	//var dat map[string]interface{}
-	//var err error
-	//fmt.Println("Runing write")
-	//if len(args) != 1 {
-	//	return nil, errors.New("Incorrect number of arguments. Expecting 1. name of the key and value to set")
-	//}
-	//fmt.Println("████████████████████████Reception-Delivery-contract████████████████████████")
-	//fmt.Println(args[0])
-	//
-	//teContract := content_contract_common.TEContract{}
-	//if err := json.Unmarshal([]byte(args[0]), &teContract); err != nil {
-	//	panic(err)
-	//}
-	//shaByte := sha256.Sum256([]byte(args[0]))
-	//shaUser := base64.StdEncoding.EncodeToString(shaByte[:])
-	//fmt.Println("--------------contract-json-to-object--------------")
-	//fmt.Println(args[0])
-	//
-	//
-	////userId := dat["userId"].(string)
-	////contentId := dat["contentId"].(string)
-	////timestampMax := dat["timestampMax"].(int64)
-	////timestampUser := dat["timestampUser"].(int64)
-	//timestamp := time.Now().Unix()
-	////verify if the contract is correct
-	//if timestamp >= teContract.TimestampMax {
-	//	return nil, errors.New("Contract to old " + time.Unix(teContract.TimestampMax, 0).String() + ". " +
-	//		"Curent chainecode date " + time.Unix(timestamp, 0).String())
-	//}
+	var err error
+	fmt.Println("Runing write")
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1. name of the key and value to set")
+	}
+	fmt.Println("████████████████████████Reception-Delivery-contract████████████████████████")
+	fmt.Println(args[0])
 
-	//contract := &content_contract_common.CPContractForTE{
-	//	CPId: teContract.CPId,
-	//	ContentId: teContract.ContentId,
-	//	ShaUser: shaUser,
-	//	UserContractID:teContract.UserContractID,
-	//	Random63:rand.Int63(),
-	//	TimestampMax:   teContract.TimestampMax,
-	//	TimestampUser: teContract.TimestampUser,
-	//	TimestampBrokering: teContract.TimestampBrokering,
-	//	LicencingId:teContract.LicencingId,
-	//	TimestampCP:teContract.TimestampCP,
-	//	UserReturnID:teContract.UserReturnID,
-	//	TimestampLicencing:timestamp,
-	//	PriceMax:teContract.PriceMax,
-	//	Price:teContract.Price}
-	//contractJson, _ := json.Marshal(contract)
-	//shaByte = sha256.Sum256(contractJson)
-	//shaContract := base64.StdEncoding.EncodeToString(shaByte[:])
-	//err = stub.PutState(shaContract, contractJson) //write the variable into the chaincode state
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//event := &EventContract{
-	//	TypeContract:"Licencing",
-	//	Id:teContract.LicencingId,
-	//	Sha:shaContract}
-	//tosend, _ := json.Marshal(event)
-	//err = stub.SetEvent("evtsender", tosend)
-	//if err != nil {
-	//	return nil, err
-	//}
+	cPContract := CPContract{}
+	if err := json.Unmarshal([]byte(args[0]), &cPContract); err != nil {
+		panic(err)
+	}
+	shaByte := sha256.Sum256([]byte(args[0]))
+	shaUser := base64.StdEncoding.EncodeToString(shaByte[:])
+	fmt.Println("--------------contract-json-to-object--------------")
+	fmt.Println(args[0])
+
+
+	//userId := dat["userId"].(string)
+	//contentId := dat["contentId"].(string)
+	//timestampMax := dat["timestampMax"].(int64)
+	//timestampUser := dat["timestampUser"].(int64)
+	timestamp := time.Now().Unix()
+	//verify if the contract is correct
+	if timestamp >= cPContract.TimestampMax {
+		return nil, errors.New("Contract to old " + time.Unix(cPContract.TimestampMax, 0).String() + ". " +
+			"Curent chainecode date " + time.Unix(timestamp, 0).String())
+	}
+
+	contract := &CPContractForTE{
+		CPId: cPContract.CPId,
+		ContentId: cPContract.ContentId,
+		ShaUser: shaUser,
+		UserContractID:cPContract.UserContractID,
+		Random63:rand.Int63(),
+		TimestampMax:   cPContract.TimestampMax,
+		TimestampUser: cPContract.TimestampUser,
+		TimestampBrokering: cPContract.TimestampBrokering,
+		LicencingId:cPContract.LicencingId,
+		TimestampCP:cPContract.TimestampCP,
+		UserReturnID:cPContract.UserReturnID,
+		TimestampLicencing:timestamp,
+		PriceMax:cPContract.PriceMax,
+		Price:cPContract.Price}
+	contractJson, _ := json.Marshal(contract)
+	shaByte = sha256.Sum256(contractJson)
+	shaContract := base64.StdEncoding.EncodeToString(shaByte[:])
+	err = stub.PutState(shaContract, contractJson) //write the variable into the chaincode state
+	if err != nil {
+		return nil, err
+	}
+
+	event := &EventContract{
+		TypeContract:"Licencing",
+		Id:cPContract.LicencingId,
+		Sha:shaContract}
+	tosend, _ := json.Marshal(event)
+	err = stub.SetEvent("evtsender", tosend)
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
 

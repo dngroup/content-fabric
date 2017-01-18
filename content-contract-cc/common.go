@@ -1,4 +1,4 @@
-package content_contract_common
+package main
 
 
 
