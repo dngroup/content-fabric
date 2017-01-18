@@ -27,6 +27,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"github.com/dngroup/content-fabric/content-contract-common"
 	"encoding/base64"
+	"./common"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -223,7 +224,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 	fmt.Println("██████████████████████████Reception-user-contract██████████████████████████")
 	fmt.Println(args[0])
 
-	userContract := UserContract{}
+	userContract := common.UserContract{}
 	if err := json.Unmarshal([]byte(args[0]), &userContract); err != nil {
 		panic(err)
 	}
@@ -244,7 +245,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 			"Curent chainecode date " + time.Unix(timestamp, 0).String())
 	}
 
-	contract := &UserContractForCP{
+	contract := &common.UserContractForCP{
 		UserId: userContract.UserId,
 		ContentId: userContract.ContentId,
 		ShaUser: shaUser,
@@ -260,7 +261,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 		return nil, err
 	}
 
-	event := &EventContract{
+	event := &common.EventContract{
 		TypeContract:"User",
 		Id:userContract.ContentId,
 		Sha:shaContract}
@@ -283,7 +284,7 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 	fmt.Println("████████████████████████Reception-licencing-contract████████████████████████")
 	fmt.Println(args[0])
 
-	cPContract := CPContract{}
+	cPContract := common.CPContract{}
 	if err := json.Unmarshal([]byte(args[0]), &cPContract); err != nil {
 		panic(err)
 	}
@@ -304,7 +305,7 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 			"Curent chainecode date " + time.Unix(timestamp, 0).String())
 	}
 
-	contract := &CPContractForTE{
+	contract := &common.CPContractForTE{
 		CPId: cPContract.CPId,
 		ContentId: cPContract.ContentId,
 		ShaUser: shaUser,
@@ -327,7 +328,7 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 		return nil, err
 	}
 
-	event := &EventContract{
+	event := &common.EventContract{
 		TypeContract:"Licencing",
 		Id:cPContract.LicencingId,
 		Sha:shaContract}
@@ -351,7 +352,7 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 	fmt.Println("████████████████████████Reception-Delivery-contract████████████████████████")
 	fmt.Println(args[0])
 
-	cPContract := CPContract{}
+	cPContract := common.CPContract{}
 	if err := json.Unmarshal([]byte(args[0]), &cPContract); err != nil {
 		panic(err)
 	}
@@ -372,7 +373,7 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 			"Curent chainecode date " + time.Unix(timestamp, 0).String())
 	}
 
-	contract := &CPContractForTE{
+	contract := &common.CPContractForTE{
 		CPId: cPContract.CPId,
 		ContentId: cPContract.ContentId,
 		ShaUser: shaUser,
@@ -395,7 +396,7 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 		return nil, err
 	}
 
-	event := &EventContract{
+	event := &common.EventContract{
 		TypeContract:"Licencing",
 		Id:cPContract.LicencingId,
 		Sha:shaContract}
