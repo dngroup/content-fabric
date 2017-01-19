@@ -67,6 +67,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.contentBrokeringContract(stub, args)
 	} else if function == "content-licencing-contract" {
 		return t.contentLicencingContract(stub, args)
+	} else if function == "content-delevery-contract" {
+		return t.contentLicencingContract(stub, args)
 	}
 	//else if function == "content-licensing-contract" {
 	//		return t.licensing(stub, args)

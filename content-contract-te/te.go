@@ -301,7 +301,7 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 			ChaincodeID:content_contract_common.ChaincodeID{
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
-				Function:"content-licencing-contract",
+				Function:"content-delevery-contract",
 				Args:[]string{string(contractJson)}}},
 		ID:1}
 
