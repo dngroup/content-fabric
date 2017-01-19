@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
+	"github.com/dngroup/content-fabric/content-contract-common"
 )
 
 type adapter struct {
@@ -27,82 +28,6 @@ type adapter struct {
 	chaincodeID        string
 }
 
-type CPContractForTE struct {
-	CPId               string    `json:"cPId"`
-	ContentId          string    `json:"contentID"`
-	LicencingId        string    `json:"licencingID"`
-
-	Price              float64   `json:"price"`
-	PriceMax           float64   `json:"priceMax"`
-
-	//time max after the request is deleted
-	TimestampMax       int64     `json:"timestampMax"`
-	//sha of user massage
-	ShaUser            string    `json:"sha_user"`
-	UserContractID     string    `json:"userContractID`
-	UserReturnID       string    `json:"userReturnID"`
-	// random int
-	Random63           int64     `json:"random63"`
-	//use for state
-	TimestampUser      int64     `json:"timestampUser"`
-	TimestampBrokering int64     `json:"timestampBrokering"`
-	TimestampCP        int64     `json:"timestampCP"`
-	TimestampLicencing int64     `json:"timestampLicencing"`
-}
-type TEContract struct {
-	TEId               string    `json:"tEId"`
-	Price              float64   `json:"price"`
-	//time max after the request is deleted
-	TimestampMax       int64     `json:"timestampMax"`
-	//sha of user massage
-	ShaUser            string    `json:"sha_user"`
-	UserContractID     string    `json:"userContractID`
-	CPContractID       string    `json:"CPContractID`
-	UserReturnID       string    `json:"userReturnID"`
-	// random int
-	Random63           int64     `json:"random63"`
-	//use for state
-	TimestampUser      int64     `json:"timestampUser"`
-	TimestampBrokering int64     `json:"timestampBrokering"`
-	TimestampCP        int64     `json:"timestampCP"`
-	TimestampLicencing int64     `json:"timestampLicencing"`
-
-	TimestampTE        int64     `json:"timestampTE"`
-}
-
-type EventContract struct {
-	TypeContract string    `json:"typeContract"`
-	Sha          string    `json:"sha"`
-	Id           string    `json:"ID"`
-}
-type Response struct {
-	Jsonrpc string `json:"jsonrpc"`
-	Result  struct {
-			Status  string `json:"status"`
-			Message string `json:"message"`
-		} `json:"result"`
-	ID      int `json:"id"`
-}
-type Request struct {
-	Jsonrpc string `json:"jsonrpc"`
-	Method  string `json:"method"`
-	Params  Params `json:"params"`
-	ID      int `json:"id"`
-}
-
-type Params struct {
-	Type          int `json:"type"`
-	ChaincodeID   ChaincodeID `json:"chaincodeID"`
-	CtorMsg       CtorMsg `json:"ctorMsg"`
-	SecureContext string `json:"secureContext"`
-}
-type ChaincodeID   struct {
-	Name string `json:"name"`
-}
-type CtorMsg       struct {
-	Function string `json:"function"`
-	Args     []string `json:"args"`
-}
 
 //GetInterestedEvents implements consumer.EventAdapter interface for registering interested events
 func (a *adapter) GetInterestedEvents() ([]*pb.Interest, error) {
@@ -223,7 +148,7 @@ func main() {
 			fmt.Printf("Received chaincode event\n")
 			fmt.Printf("------------------------\n")
 			fmt.Printf("Chaincode Event:%v\n", ce)
-			eventContract := EventContract{}
+			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract) {
 				cPContractForTE := getCPContract(eventContract.Sha, restAddress, chaincodeID)
 				var price float64
@@ -237,17 +162,17 @@ func main() {
 	}
 }
 
-func isNotToExpensive(contract CPContractForTE, price float64) bool {
-	price = (contract.PriceMax + float64(rand.Int31n(500) / 100))
-	if contract.PriceMax > price {
+func isNotToExpensive(contract content_contract_common.CPContractForTE, price *float64) bool {
+	*price = (contract.PriceMax + float64(rand.Int31n(500)) / 100)
+	if contract.PriceMax > *price {
 		return true
 	}
 	fmt.Println("######################### Is to expensive ###########################")
 	return false
 }
 
-func getCPContract(CPContractSha string, restAddress string, chaincodeID string) CPContractForTE {
-	fmt.Println("██████████████████████████Get-User-contract██████████████████████████")
+func getCPContract(CPContractSha string, restAddress string, chaincodeID string) content_contract_common.CPContractForTE {
+	fmt.Println("██████████████████████████ Get-User-contract ██████████████████████████")
 	url := "http://" + restAddress + "/chaincode"
 
 
@@ -256,14 +181,14 @@ func getCPContract(CPContractSha string, restAddress string, chaincodeID string)
 	//	"\" }, \"ctorMsg\": { \"function\":\"read\", \"args\":[\"Q" +
 	//	userContractSha +
 	//	"\"] } }, \"id\": 2}")
-	payload := &Request{
+	payload := &content_contract_common.Request{
 		Jsonrpc:"2.0",
 		Method:"query",
-		Params:Params{
+		Params:content_contract_common.Params{
 			Type:1,
-			ChaincodeID:ChaincodeID{
+			ChaincodeID:content_contract_common.ChaincodeID{
 				Name:chaincodeID},
-			CtorMsg:CtorMsg{
+			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{CPContractSha}}},
 		ID:2}
@@ -281,7 +206,7 @@ func getCPContract(CPContractSha string, restAddress string, chaincodeID string)
 	fmt.Println(res)
 	fmt.Println(string(body))
 	fmt.Println("--------------------------CP-contract-to-json---------------------------")
-	response := Response{}
+	response := content_contract_common.Response{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		panic(err)
 	}
@@ -289,7 +214,7 @@ func getCPContract(CPContractSha string, restAddress string, chaincodeID string)
 	//result := dat["result"].(map[string]interface{})
 
 	//rawContract := result["message"].(string)
-	cPContractForTE := CPContractForTE{}
+	cPContractForTE := content_contract_common.CPContractForTE{}
 	json.Unmarshal([]byte(response.Result.Message), &cPContractForTE)
 	fmt.Println("-------------------------User-contract-json--------------------------------")
 	fmt.Println(response.Result.Message)
@@ -297,7 +222,7 @@ func getCPContract(CPContractSha string, restAddress string, chaincodeID string)
 }
 
 //analyse what is the value as change
-func analyse(event *pb.Event_ChaincodeEvent, eventContract *EventContract) bool {
+func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract) bool {
 	fmt.Println("██████████████████████████Analyse--contract██████████████████████████")
 	data := event.ChaincodeEvent.Payload
 	err := json.Unmarshal([]byte(data), &eventContract)
@@ -323,9 +248,9 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *EventContract) bool 
 
 }
 
-func createCPContract(cPContractForTE CPContractForTE, CPContractID string, teID string, price float64, restAddress string, chaincodeID string) {
+func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string, price float64, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
-	tEContract := TEContract{
+	tEContract := content_contract_common.TEContract{
 		TEId:teID,
 		TimestampMax:cPContractForTE.TimestampMax,
 		Random63:cPContractForTE.Random63,
@@ -366,14 +291,14 @@ func createCPContract(cPContractForTE CPContractForTE, CPContractID string, teID
 	//	"\", \"args\": [ \"" +
 	//	contractOnJson +
 	//	"\" ] } }, \"id\": 1}")
-	payload := &Request{
+	payload := &content_contract_common.Request{
 		Jsonrpc:"2.0",
 		Method:"invoke",
-		Params:Params{
+		Params:content_contract_common.Params{
 			Type:1,
-			ChaincodeID:ChaincodeID{
+			ChaincodeID:content_contract_common.ChaincodeID{
 				Name:chaincodeID},
-			CtorMsg:CtorMsg{
+			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-licencing-contract",
 				Args:[]string{contractOnJson}}},
 		ID:1}

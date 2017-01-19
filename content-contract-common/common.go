@@ -1,6 +1,4 @@
-package main
-
-
+package content_contract_common
 
 type TEContract struct {
 	TEId               string    `json:"tEId"`
@@ -54,7 +52,7 @@ type CPContract struct {
 	TimestampMax       int64     `json:"timestampMax"`
 	//sha of user massage
 	ShaUser            string    `json:"sha_user"`
-	UserContractID     string    `json:"userContractID`
+	UserContractID     string    `json:"userContractID"`
 	UserReturnID       string    `json:"userReturnID"`
 	// random int
 	Random63           int64     `json:"random63"`
@@ -74,7 +72,7 @@ type CPContractForTE struct {
 	TimestampMax       int64     `json:"timestampMax"`
 	//sha of user massage
 	ShaUser            string    `json:"sha_user"`
-	UserContractID     string    `json:"userContractID`
+	UserContractID     string    `json:"userContractID"`
 	UserReturnID       string    `json:"userReturnID"`
 	// random int
 	Random63           int64     `json:"random63"`
@@ -90,14 +88,6 @@ type EventContract struct {
 	Sha          string    `json:"sha"`
 	Id           string    `json:"ID"`
 }
-
-
-
-
-
-
-
-
 
 type Response struct {
 	Jsonrpc string `json:"jsonrpc"`
@@ -127,3 +117,4 @@ type CtorMsg       struct {
 	Function string `json:"function"`
 	Args     []string `json:"args"`
 }
+

@@ -27,81 +27,12 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"github.com/dngroup/content-fabric/content-contract-common"
 	"encoding/base64"
-
 )
 
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
 
-//type UserContract struct {
-//	UserId        string    `json:"userID"`
-//	ContentId     string    `json:"contentID"`
-//	//time max after the request is deleted
-//	TimestampMax  int64     `json:"timestampMax"`
-//	//use for stat
-//	TimestampUser int64     `json:"timestampUser"`
-//}
-//
-//type UserContractForCP struct {
-//	UserId             string    `json:"userID"`
-//	ContentId          string    `json:"contentID"`
-//	//time max after the request is deleted
-//	TimestampMax       int64     `json:"timestampMax"`
-//	//sha of user massage
-//	ShaUser            string    `json:"sha_user"`
-//	// random int
-//	Random63           int64     `json:"random63"`
-//	//use for state
-//	TimestampUser      int64     `json:"timestampUser"`
-//	TimestampBrokering int64     `json:"timestampBrokering"`
-//}
-//type CPContract struct {
-//	CPId               string    `json:"cPId"`
-//	ContentId          string    `json:"contentID"`
-//	LicencingId        string    `json:"licencingID"`
-//	Price              float64   `json:"price"`
-//	PriceMax           float64   `json:"priceMax"`
-//	//time max after the request is deleted
-//	TimestampMax       int64     `json:"timestampMax"`
-//	//sha of user massage
-//	ShaUser            string    `json:"sha_user"`
-//	UserContractID     string    `json:"userContractID`
-//	UserReturnID       string    `json:"userReturnID"`
-//	// random int
-//	Random63           int64     `json:"random63"`
-//	//use for state
-//	TimestampUser      int64     `json:"timestampUser"`
-//	TimestampBrokering int64     `json:"timestampBrokering"`
-//	TimestampCP        int64     `json:"TimestampCP"`
-//}
-//
-//type CPContractForTE struct {
-//	CPId               string    `json:"cPId"`
-//	ContentId          string    `json:"contentID"`
-//	LicencingId        string    `json:"licencingID"`
-//	Price              float64   `json:"price"`
-//	PriceMax           float64   `json:"priceMax"`
-//	//time max after the request is deleted
-//	TimestampMax       int64     `json:"timestampMax"`
-//	//sha of user massage
-//	ShaUser            string    `json:"sha_user"`
-//	UserContractID     string    `json:"userContractID`
-//	UserReturnID       string    `json:"userReturnID"`
-//	// random int
-//	Random63           int64     `json:"random63"`
-//	//use for state
-//	TimestampUser      int64     `json:"timestampUser"`
-//	TimestampBrokering int64     `json:"timestampBrokering"`
-//	TimestampCP        int64     `json:"timestampCP"`
-//	TimestampLicencing int64     `json:"timestampLicencing"`
-//}
-//
-//type EventContract struct {
-//	TypeContract string    `json:"typeContract"`
-//	Sha          string    `json:"sha"`
-//	Id           string    `json:"ID"`
-//}
 
 // ============================================================================================================================
 // Main
@@ -352,14 +283,15 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 	fmt.Println("████████████████████████Reception-Delivery-contract████████████████████████")
 	fmt.Println(args[0])
 
-	cPContract := CPContract{}
-	if err := json.Unmarshal([]byte(args[0]), &cPContract); err != nil {
+	teContract := TEContract{}
+	if err := json.Unmarshal([]byte(args[0]), &teContract); err != nil {
 		panic(err)
 	}
-	shaByte := sha256.Sum256([]byte(args[0]))
-	shaUser := base64.StdEncoding.EncodeToString(shaByte[:])
+	//shaByte := sha256.Sum256([]byte(args[0]))
+	//shaContract := base64.StdEncoding.EncodeToString(shaByte[:])
 	fmt.Println("--------------contract-json-to-object--------------")
 	fmt.Println(args[0])
+
 
 
 	//userId := dat["userId"].(string)
@@ -368,44 +300,42 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 	//timestampUser := dat["timestampUser"].(int64)
 	timestamp := time.Now().Unix()
 	//verify if the contract is correct
-	if timestamp >= cPContract.TimestampMax {
-		return nil, errors.New("Contract to old " + time.Unix(cPContract.TimestampMax, 0).String() + ". " +
+	if timestamp >= teContract.TimestampMax {
+		return nil, errors.New("Contract to old " + time.Unix(teContract.TimestampMax, 0).String() + ". " +
 			"Curent chainecode date " + time.Unix(timestamp, 0).String())
 	}
 
-	contract := &CPContractForTE{
-		CPId: cPContract.CPId,
-		ContentId: cPContract.ContentId,
-		ShaUser: shaUser,
-		UserContractID:cPContract.UserContractID,
-		Random63:rand.Int63(),
-		TimestampMax:   cPContract.TimestampMax,
-		TimestampUser: cPContract.TimestampUser,
-		TimestampBrokering: cPContract.TimestampBrokering,
-		LicencingId:cPContract.LicencingId,
-		TimestampCP:cPContract.TimestampCP,
-		UserReturnID:cPContract.UserReturnID,
-		TimestampLicencing:timestamp,
-		PriceMax:cPContract.PriceMax,
-		Price:cPContract.Price}
-	contractJson, _ := json.Marshal(contract)
-	shaByte = sha256.Sum256(contractJson)
-	shaContract := base64.StdEncoding.EncodeToString(shaByte[:])
-	err = stub.PutState(shaContract, contractJson) //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
+	//Verify if the price is lower than the old one
+	fmt.Println("████████████████████████Price comparaisson████████████████████████")
 
-	event := &EventContract{
-		TypeContract:"Licencing",
-		Id:cPContract.LicencingId,
-		Sha:shaContract}
-	tosend, _ := json.Marshal(event)
-	err = stub.SetEvent("evtsender", tosend)
+	//get the last value
+	valAsbytes, err := stub.GetState(teContract.UserReturnID);
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	if valAsbytes == nil {
+		fmt.Println("1th contract")
+		err = stub.PutState(teContract.UserReturnID, []byte(args[0]))
+		return nil, err
+	}
+	teContractOld := TEContract{}
+	if err := json.Unmarshal([]byte(args[0]), &teContractOld); err != nil {
+		panic(err)
+	}
+	if teContract.Price >= teContractOld.Price {
+		fmt.Println("more expensive")
+	}
+	//verify if the value have change
+	isOk, err := stub.VerifyAttribute(teContract.UserReturnID, valAsbytes)
+	if err != nil {
+		return nil, err
+	}
+	if isOk {
+		fmt.Println("new contract less expensive")
+		err = stub.PutState(teContract.UserReturnID, []byte(args[0]))
+		return nil, err
+	}
+	return nil, errors.New("The value have change need to change this code!!!")
 }
 
 

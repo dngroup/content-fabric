@@ -16,7 +16,9 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
-	"github.com/hyperledger/fabric/peer/common"
+
+
+	"github.com/dngroup/content-fabric/content-contract-common"
 )
 
 type adapter struct {
@@ -146,7 +148,7 @@ func main() {
 			fmt.Printf("Received chaincode event\n")
 			fmt.Printf("------------------------\n")
 			fmt.Printf("Chaincode Event:%v\n", ce)
-			eventContract := common.EventContract{}
+			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract) {
 				userContractForCP := getUserContract(eventContract.Sha, restAddress, chaincodeID)
 
@@ -156,7 +158,7 @@ func main() {
 		}
 	}
 }
-func getUserContract(userContractSha string, restAddress string, chaincodeID string) common.UserContractForCP {
+func getUserContract(userContractSha string, restAddress string, chaincodeID string) content_contract_common.UserContractForCP {
 	fmt.Println("██████████████████████████Get-User-contract██████████████████████████")
 	url := "http://" + restAddress + "/chaincode"
 
@@ -166,14 +168,14 @@ func getUserContract(userContractSha string, restAddress string, chaincodeID str
 	//	"\" }, \"ctorMsg\": { \"function\":\"read\", \"args\":[\"Q" +
 	//	userContractSha +
 	//	"\"] } }, \"id\": 2}")
-	payload := &Request{
+	payload := &content_contract_common.Request{
 		Jsonrpc:"2.0",
 		Method:"query",
-		Params:Params{
+		Params:content_contract_common.Params{
 			Type:1,
-			ChaincodeID:ChaincodeID{
+			ChaincodeID:content_contract_common.ChaincodeID{
 				Name:chaincodeID},
-			CtorMsg:CtorMsg{
+			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{userContractSha}}},
 		ID:2}
@@ -191,7 +193,7 @@ func getUserContract(userContractSha string, restAddress string, chaincodeID str
 	fmt.Println(res)
 	fmt.Println(string(body))
 	fmt.Println("--------------------------User-contract-to-json---------------------------")
-	response := Response{}
+	response := content_contract_common.Response{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		panic(err)
 	}
@@ -199,7 +201,7 @@ func getUserContract(userContractSha string, restAddress string, chaincodeID str
 	//result := dat["result"].(map[string]interface{})
 
 	//rawContract := result["message"].(string)
-	userContractForCP := UserContractForCP{}
+	userContractForCP := content_contract_common.UserContractForCP{}
 	json.Unmarshal([]byte(response.Result.Message), &userContractForCP)
 	fmt.Println("-------------------------User-contract-json--------------------------------")
 	fmt.Println(response.Result.Message)
@@ -207,7 +209,7 @@ func getUserContract(userContractSha string, restAddress string, chaincodeID str
 }
 
 //analyse what is the value as change
-func analyse(event *pb.Event_ChaincodeEvent, eventContract *common.EventContract) bool {
+func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract) bool {
 	fmt.Println("██████████████████████████Analyse--contract██████████████████████████")
 	data := event.ChaincodeEvent.Payload
 	err := json.Unmarshal([]byte(data), &eventContract)
@@ -233,11 +235,11 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *common.EventContract
 
 }
 
-func createCPContract(userContractForCP common.UserContractForCP, userReturnID string, userContractID string, cpID string, restAddress string, chaincodeID string) {
+func createCPContract(userContractForCP content_contract_common.UserContractForCP, userReturnID string, userContractID string, cpID string, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
 	price := float64(rand.Int31n(5000) / 100)
-	priceMax := float64(price + rand.Int31n(1000) / 100)
-	cPContract := common.CPContract{
+	priceMax := float64(price + float64(rand.Int31n(1000) / 100))
+	cPContract := content_contract_common.CPContract{
 		CPId:cpID,
 		TimestampMax:userContractForCP.TimestampMax,
 		Random63:userContractForCP.Random63,
@@ -274,14 +276,14 @@ func createCPContract(userContractForCP common.UserContractForCP, userReturnID s
 	//	"\", \"args\": [ \"" +
 	//	contractOnJson +
 	//	"\" ] } }, \"id\": 1}")
-	payload := &common.Request{
+	payload := &content_contract_common.Request{
 		Jsonrpc:"2.0",
 		Method:"invoke",
-		Params:common.Params{
+		Params:content_contract_common.Params{
 			Type:1,
-			ChaincodeID:common.ChaincodeID{
+			ChaincodeID:content_contract_common.ChaincodeID{
 				Name:chaincodeID},
-			CtorMsg:common.CtorMsg{
+			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-licencing-contract",
 				Args:[]string{contractOnJson}}},
 		ID:1}

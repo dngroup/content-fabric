@@ -8,16 +8,10 @@ import (
 	"time"
 	"encoding/json"
 	"io/ioutil"
+	"github.com/dngroup/content-fabric/content-contract-common"
 )
 
-type UserContract struct {
-	UserId        string    `json:"userID"`
-	ContentId     string    `json:"contentID"`
-	//time max after the request is deleted
-	TimestampMax  int64     `json:"timestampMax"`
-	//use for stat
-	TimestampUser int64     `json:"timestampUser"`
-}
+
 
 func main() {
 	fmt.Printf("Starting\n")
@@ -37,7 +31,7 @@ func main() {
 	fmt.Printf("Create a new contract for %s\n", userId)
 
 	//creat the new contract
-	contract := UserContract{
+	contract := content_contract_common.UserContract{
 		userId,
 		contentId,
 		time.Now().Add(time.Duration(timeMax) * time.Second).Unix(),
