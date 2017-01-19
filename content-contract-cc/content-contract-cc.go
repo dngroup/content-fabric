@@ -217,7 +217,7 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 
 	cPContract := CPContract{}
 	if err := json.Unmarshal([]byte(args[0]), &cPContract); err != nil {
-		panic(err)
+		return nil, err
 	}
 	shaByte := sha256.Sum256([]byte(args[0]))
 	shaUser := base64.StdEncoding.EncodeToString(shaByte[:])

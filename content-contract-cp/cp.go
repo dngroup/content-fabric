@@ -7,7 +7,7 @@ import (
 
 	"github.com/hyperledger/fabric/events/consumer"
 	pb "github.com/hyperledger/fabric/protos"
-	"strings"
+	//"strings"
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
@@ -16,7 +16,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
-
 
 	"github.com/dngroup/content-fabric/content-contract-common"
 )
@@ -237,8 +236,8 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 func createCPContract(userContractForCP content_contract_common.UserContractForCP, userReturnID string, userContractID string, cpID string, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
-	price := float64(rand.Int31n(5000) / 100)
-	priceMax := float64(price + float64(rand.Int31n(1000) / 100))
+	price := rand.Int31n(5000)
+	priceMax := price + rand.Int31n(1000)
 	cPContract := content_contract_common.CPContract{
 		CPId:cpID,
 		TimestampMax:userContractForCP.TimestampMax,
@@ -263,9 +262,9 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 	fmt.Println("----------------------------JSON-Object----------------------------")
 	fmt.Println("len:", len(contractJson))
 	// use this format to enable the json on the payload json
-	contractOnJson := strings.Replace(string(contractJson), "\"", "\\\"", -1)
+	//contractOnJson := strings.Replace(string(contractJson), "\"", "\\\"", -1)
 	fmt.Println("----------------------------JSON-Object----------------------------")
-	fmt.Println(string(contractOnJson))
+	fmt.Println(string(contractJson))
 	//create the request
 	url := "http://" + restAddress + "/chaincode"
 
@@ -285,7 +284,7 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-licencing-contract",
-				Args:[]string{contractOnJson}}},
+				Args:[]string{string(contractJson)}}},
 		ID:1}
 
 	jsonpPayload, _ := json.Marshal(payload)

@@ -2,7 +2,7 @@ package main
 
 type TEContract struct {
 	TEId               string    `json:"tEId"`
-	Price              float64   `json:"price"`
+	Price              int32   `json:"price"`
 	//time max after the request is deleted
 	TimestampMax       int64     `json:"timestampMax"`
 	//sha of user massage
@@ -46,8 +46,8 @@ type CPContract struct {
 	CPId               string    `json:"cPId"`
 	ContentId          string    `json:"contentID"`
 	LicencingId        string    `json:"licencingID"`
-	Price              float64   `json:"price"`
-	PriceMax           float64   `json:"priceMax"`
+	Price              int32   `json:"price"`
+	PriceMax           int32   `json:"priceMax"`
 	//time max after the request is deleted
 	TimestampMax       int64     `json:"timestampMax"`
 	//sha of user massage
@@ -66,8 +66,8 @@ type CPContractForTE struct {
 	CPId               string    `json:"cPId"`
 	ContentId          string    `json:"contentID"`
 	LicencingId        string    `json:"licencingID"`
-	Price              float64   `json:"price"`
-	PriceMax           float64   `json:"priceMax"`
+	Price              int32   `json:"price"`
+	PriceMax           int32   `json:"priceMax"`
 	//time max after the request is deleted
 	TimestampMax       int64     `json:"timestampMax"`
 	//sha of user massage

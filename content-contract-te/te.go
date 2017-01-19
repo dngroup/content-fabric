@@ -8,7 +8,7 @@ import (
 	"github.com/hyperledger/fabric/events/consumer"
 	pb "github.com/hyperledger/fabric/protos"
 	//"encoding/json"
-	"strings"
+	//"strings"
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
@@ -151,9 +151,10 @@ func main() {
 			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract) {
 				cPContractForTE := getCPContract(eventContract.Sha, restAddress, chaincodeID)
-				var price float64
-				isNotToExpensive(cPContractForTE, &price)
+				var price int32
+				isNotToExpensive(cPContractForTE, price)
 				{
+					fmt.Println("Price =%i", price)
 					//userReturnID := ce.ChaincodeEvent.TxID
 					createCPContract(cPContractForTE, eventContract.Sha, teID, price, restAddress, chaincodeIdToSend, )
 				}
@@ -162,17 +163,18 @@ func main() {
 	}
 }
 
-func isNotToExpensive(contract content_contract_common.CPContractForTE, price *float64) bool {
-	*price = (contract.PriceMax + float64(rand.Int31n(500)) / 100)
-	if contract.PriceMax > *price {
+func isNotToExpensive(contract content_contract_common.CPContractForTE, price int32) bool {
+	price = contract.Price + rand.Int31n(500)
+	if contract.PriceMax > price {
+		fmt.Println("################### Is not to expensive %i vs %i ##################",price,contract.PriceMax)
 		return true
 	}
-	fmt.Println("######################### Is to expensive ###########################")
+	fmt.Println("################### Is to expensive %i vs %i ##################",price,contract.PriceMax)
 	return false
 }
 
 func getCPContract(CPContractSha string, restAddress string, chaincodeID string) content_contract_common.CPContractForTE {
-	fmt.Println("██████████████████████████ Get-User-contract ██████████████████████████")
+	fmt.Println("██████████████████████████ Get-CP-contract ██████████████████████████")
 	url := "http://" + restAddress + "/chaincode"
 
 
@@ -248,7 +250,7 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 }
 
-func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string, price float64, restAddress string, chaincodeID string) {
+func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string, price int32, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
 	tEContract := content_contract_common.TEContract{
 		TEId:teID,
@@ -278,9 +280,9 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 	fmt.Println("----------------------------JSON-Object----------------------------")
 	fmt.Println("len:", len(contractJson))
 	// use this format to enable the json on the payload json
-	contractOnJson := strings.Replace(string(contractJson), "\"", "\\\"", -1)
+	//contractOnJson := strings.Replace(string(contractJson), "\"", "\\\"", -1)
 	fmt.Println("----------------------------JSON-Object----------------------------")
-	fmt.Println(string(contractOnJson))
+	fmt.Println(string(contractJson))
 	//create the request
 	url := "http://" + restAddress + "/chaincode"
 
@@ -300,7 +302,7 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-licencing-contract",
-				Args:[]string{contractOnJson}}},
+				Args:[]string{string(contractJson)}}},
 		ID:1}
 
 	jsonpPayload, _ := json.Marshal(payload)
