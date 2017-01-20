@@ -9,9 +9,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"github.com/dngroup/content-fabric/content-contract-common"
+	"bytes"
 )
-
-
 
 func main() {
 	fmt.Printf("Starting\n")
@@ -40,7 +39,7 @@ func main() {
 	fmt.Println(contract)
 	//convert to json
 	contractJson, err := json.Marshal(contract)
-	if (err != nil){
+	if (err != nil) {
 		return
 	}
 	fmt.Println("----------------------------JSON-Object----------------------------")
@@ -73,4 +72,53 @@ func main() {
 	fmt.Println(res)
 	fmt.Println(string(body))
 
+	response := content_contract_common.Response{}
+	if err := json.Unmarshal(body, &response); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("██████████████████████████ Wait a result " + response.Result.Message + " ██████████████████████████")
+
+	payloadQuery := &content_contract_common.Request{
+		Jsonrpc:"2.0",
+		Method:"query",
+		Params:content_contract_common.Params{
+			Type:1,
+			ChaincodeID:content_contract_common.ChaincodeID{
+				Name:chaincodeID},
+			CtorMsg:content_contract_common.CtorMsg{
+				Function:"read",
+				Args:[]string{response.Result.Message}}},
+		ID:2}
+
+	jsonpPayload, _ := json.Marshal(payloadQuery)
+
+
+	req.Header.Add("content-type", "application/json")
+
+	for time.Now().Unix() < contract.TimestampMax {
+		time.Sleep(1000 * time.Millisecond)
+		req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonpPayload))
+		res, _ = http.DefaultClient.Do(req)
+
+		defer res.Body.Close()
+		body, _ = ioutil.ReadAll(res.Body)
+		//fmt.Println("-----------------------------RAW-contract----------------------------")
+		//fmt.Println(res)
+		//fmt.Println(string(body))
+		//fmt.Println("--------------------------contract-to-json---------------------------")
+		response = content_contract_common.Response{}
+		if err := json.Unmarshal(body, &response); err != nil {
+			panic(err)
+		}
+		//fmt.Println(dat)
+		//result := dat["result"].(map[string]interface{})
+
+		//rawContract := result["message"].(string)
+		teContractForTE := content_contract_common.TEContract{}
+		json.Unmarshal([]byte(response.Result.Message), &teContractForTE)
+		fmt.Println("-------------------------te-contract-json--------------------------------")
+		fmt.Println(response.Result.Message)
+
+	}
 }

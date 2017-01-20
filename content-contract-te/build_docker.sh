@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#TODO: NEED TO EDIT THIS
-CGO_ENABLED=0 go build -o user user.go
-chmod +x user
-docker build -t dngroup/user .
+CGO_ENABLED=0 go build -o content-contract-te te.go
+chmod +x content-contract-te
+docker build -t dngroup/content-contract-te .

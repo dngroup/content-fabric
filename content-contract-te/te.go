@@ -151,10 +151,9 @@ func main() {
 			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract) {
 				cPContractForTE := getCPContract(eventContract.Sha, restAddress, chaincodeID)
-				var price int32
-				isNotToExpensive(cPContractForTE, price)
-				{
-					fmt.Println("Price =%i", price)
+				price := isNotToExpensive(cPContractForTE)
+				if price >= 0 {
+					fmt.Println("Price =%i")
 					//userReturnID := ce.ChaincodeEvent.TxID
 					createCPContract(cPContractForTE, eventContract.Sha, teID, price, restAddress, chaincodeIdToSend, )
 				}
@@ -163,14 +162,14 @@ func main() {
 	}
 }
 
-func isNotToExpensive(contract content_contract_common.CPContractForTE, price int32) bool {
-	price = contract.Price + rand.Int31n(500)
+func isNotToExpensive(contract content_contract_common.CPContractForTE) int32 {
+	price := contract.Price + rand.Int31n(500)
 	if contract.PriceMax > price {
-		fmt.Println("################### Is not to expensive %i vs %i ##################",price,contract.PriceMax)
-		return true
+		fmt.Println("################### Is not to expensive %i vs %i ##################", price, contract.PriceMax)
+		return price
 	}
-	fmt.Println("################### Is to expensive %i vs %i ##################",price,contract.PriceMax)
-	return false
+	fmt.Println("################### Is to expensive %i vs %i ##################", price, contract.PriceMax)
+	return -1
 }
 
 func getCPContract(CPContractSha string, restAddress string, chaincodeID string) content_contract_common.CPContractForTE {

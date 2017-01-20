@@ -325,7 +325,7 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 		panic(err)
 	}
 	if teContract.Price >= teContractOld.Price {
-		fmt.Println("more expensive")
+		fmt.Println("more expensive {} > {}",teContract.Price,teContractOld.Price)
 	}
 	//verify if the value have change
 	isOk, err := stub.VerifyAttribute(teContract.UserReturnID, valAsbytes)
@@ -333,7 +333,7 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 		return nil, err
 	}
 	if isOk {
-		fmt.Println("new contract less expensive")
+		fmt.Println("new contract less expensive {} > {}",teContract.Price,teContractOld.Price)
 		err = stub.PutState(teContract.UserReturnID, []byte(args[0]))
 		return nil, err
 	}
