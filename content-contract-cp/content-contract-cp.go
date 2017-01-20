@@ -98,7 +98,7 @@ func main() {
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server")
 	flag.StringVar(&cpID, "CP-ID", "", "id of the cp")
 	flag.Parse()
-
+	rand.Seed(time.Now().UnixNano())
 	fmt.Printf("Event Address: %s\n", eventAddress)
 
 	a := createEventClient(eventAddress, listenToRejections, chaincodeID)
@@ -236,8 +236,8 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 func createCPContract(userContractForCP content_contract_common.UserContractForCP, userReturnID string, userContractID string, cpID string, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
-	price := rand.Int31n(5000)
-	priceMax := price + rand.Int31n(1000)
+	price := rand.Intn(5000)
+	priceMax := price + rand.Intn(1000)
 	cPContract := content_contract_common.CPContract{
 		CPId:cpID,
 		TimestampMax:userContractForCP.TimestampMax,

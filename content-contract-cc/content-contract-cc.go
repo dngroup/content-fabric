@@ -198,8 +198,11 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 		TypeContract:"User",
 		Id:userContract.ContentId,
 		Sha:shaContract}
-	tosend, _ := json.Marshal(event)
-	err = stub.SetEvent("evtsender", tosend)
+	toSend, _ := json.Marshal(event)
+
+	fmt.Println("--------------Send-event--------------")
+	err = stub.SetEvent("evtsender", toSend)
+
 	if err != nil {
 		return nil, err
 	}

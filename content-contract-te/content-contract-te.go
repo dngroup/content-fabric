@@ -100,6 +100,7 @@ func main() {
 	flag.StringVar(&teID, "TE-ID", "", "id of the te")
 	flag.Parse()
 
+	rand.Seed(time.Now().UnixNano())
 	fmt.Printf("Event Address: %s\n", eventAddress)
 
 	a := createEventClient(eventAddress, listenToRejections, chaincodeID)
@@ -163,7 +164,7 @@ func main() {
 }
 
 func isNotToExpensive(contract content_contract_common.CPContractForTE) int32 {
-	price := contract.Price + rand.Int31n(500)
+	price := contract.Price + rand.Intn(500)
 	if contract.PriceMax > price {
 		fmt.Println("################### Is not to expensive %i vs %i ##################", price, contract.PriceMax)
 		return price
