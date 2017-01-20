@@ -13,8 +13,28 @@
    cd $REPONAME
    docker-compose up -d 
    ```
+   2. send chaincode
+   
+   ```
+   curl --request POST \
+  --url http://localhost:7050/chaincode \
+  --header 'cache-control: no-cache' \
+  --header 'content-type: application/json' \
+  --header 'postman-token: 356d6fb9-b49c-e62a-2d9b-6dc170309041' \
+  --data '{\n  "jsonrpc": "2.0",\n  "method": "deploy",\n  "params": {\n    "type": 1,\n    "chaincodeID": {\n      "path": "https://github.com/dngroup/content-fabric/content-contract-cc"\n    },\n    "ctorMsg": {\n      "function": "init",\n      "args": [\n      ]\n    }\n  },\n  "id": 1\n}'
+   ```
+   
+   2. start cp and te
+   
+   ```
+   ./start $NUMBER_INSTANCE $CHAINE_ID
+   ```
    
    2. start user
+   
+   ````
+   ./content-contract-cc/content-contract-cc  -userId lala -contentId bbb.mp4 -chaincodeid 4c166ef7d5220329f658ac55b4a5d3daabbf08cf10f47db5fe3aeb980ac55b2e5a42ac97fb0797f460ad770995cb1c23cec830470d1a3223a1cb885bb3580ae0 -time-max 30
+   ````
    
   Working in progress
    
@@ -25,11 +45,15 @@
    - maybe you need go dependency `github.com/hyperledger/fabric/`
         - `cd $GOPATH/src/github.com/hyperledger/`
         - `git clone --branch v0.6.1-preview --single-branch --depth 1 https://github.com/hyperledger/fabric.git`
-   - edit [chainecode.go](content-contract-cc/chainecode.go) for change the chainecode
+   - edit [chainecode.go](content-contract-cc/content-contract-cc.go) for change the chainecode
         - build for verify if working    `go build ./`
-   - edit [user.go](content-contract-user/user.go) for change the chainecode
+   - edit [user.go](content-contract-user/user.go) for change the user
         - use the script to build the new docker image
-        
+   - edit [cp.go](content-contract-cp/content-contract-cp.go) for change the CP
+        - use the script to build the new docker image
+   - edit [te.go](content-contract-te/content-contract-te.goo) for change the TE
+        - use the script to build the new docker image
+
    
 ## more information 
 
