@@ -321,7 +321,7 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 		return nil, err
 	}
 	teContractOld := TEContract{}
-	if err := json.Unmarshal([]byte(args[0]), &teContractOld); err != nil {
+	if err := json.Unmarshal(valAsbytes, &teContractOld); err != nil {
 		panic(err)
 	}
 	if teContract.Price >= teContractOld.Price {
