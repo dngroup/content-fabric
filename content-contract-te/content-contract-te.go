@@ -92,12 +92,16 @@ func main() {
 	var chaincodeIdToSend string
 	var restAddress string
 	var teID string
+	var percent int
+	var pricePercent int
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.BoolVar(&listenToRejections, "listen-to-rejections", false, "whether to listen to rejection events")
 	flag.StringVar(&chaincodeID, "events-from-chaincode", "", "listen to events from given chaincode default listen all")
 	flag.StringVar(&chaincodeIdToSend, "send-to-chaincode", "", "send to given chaincode default equal as -events-from-chaincode")
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server")
 	flag.StringVar(&teID, "TE-ID", "", "id of the te")
+	flag.IntVar(&percent, "percent", 100, "Percentage of chance of having the content default 100")
+	flag.IntVar(&pricePercent, "percent-price", 100, "Percentage of chance of having a price lower than the maximum price default 100")
 	flag.Parse()
 
 	rand.Seed(time.Now().UnixNano())
@@ -150,11 +154,11 @@ func main() {
 			fmt.Printf("------------------------\n")
 			fmt.Printf("Chaincode Event:%v\n", ce)
 			eventContract := content_contract_common.EventContract{}
-			if analyse(ce, &eventContract) {
+			if analyse(ce, &eventContract, percent) {
 				cPContractForTE := getCPContract(eventContract.Sha, restAddress, chaincodeID)
-				price := isNotToExpensive(cPContractForTE)
+				price := verifyAndGetPrice(cPContractForTE, pricePercent)
 				if price >= 0 {
-					fmt.Println("Price =%i")
+					fmt.Printf("Price = %d\n", price)
 					//userReturnID := ce.ChaincodeEvent.TxID
 					createCPContract(cPContractForTE, eventContract.Sha, teID, price, restAddress, chaincodeIdToSend, )
 				}
@@ -163,13 +167,15 @@ func main() {
 	}
 }
 
-func isNotToExpensive(contract content_contract_common.CPContractForTE) int32 {
-	price := contract.Price + rand.Intn(500)
+func verifyAndGetPrice(contract content_contract_common.CPContractForTE, pricePercent int) int {
+	random := rand.Intn(1000)
+	fmt.Printf("random = %d\n", random)
+	price := contract.Price + random * int(100 / pricePercent)
 	if contract.PriceMax > price {
-		fmt.Println("################### Is not to expensive %i vs %i ##################", price, contract.PriceMax)
+		fmt.Printf("################### Is not to expensive %d vs %d ##################\n", price, contract.PriceMax)
 		return price
 	}
-	fmt.Println("################### Is to expensive %i vs %i ##################", price, contract.PriceMax)
+	fmt.Printf("################### Is to expensive %d vs %d ##################\n", price, contract.PriceMax)
 	return -1
 }
 
@@ -224,7 +230,7 @@ func getCPContract(CPContractSha string, restAddress string, chaincodeID string)
 }
 
 //analyse what is the value as change
-func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract) bool {
+func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract, percent int) bool {
 	fmt.Println("██████████████████████████Analyse--contract██████████████████████████")
 	data := event.ChaincodeEvent.Payload
 	err := json.Unmarshal([]byte(data), &eventContract)
@@ -239,9 +245,8 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 		return false
 	}
 
-	//verify if we have a licence for this content
-	//TODO: edit this value to have a real random
-	if (rand.Intn(10) < 0) {
+	//verify if we have the content
+	if (rand.Intn(100) > percent) {
 		fmt.Println("We don't have content")
 		return false
 	}
@@ -250,7 +255,7 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 }
 
-func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string, price int32, restAddress string, chaincodeID string) {
+func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string, price int, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
 	tEContract := content_contract_common.TEContract{
 		TEId:teID,

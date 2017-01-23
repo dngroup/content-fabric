@@ -91,12 +91,14 @@ func main() {
 	var chaincodeIdToSend string
 	var restAddress string
 	var cpID string
+	var percent int
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.BoolVar(&listenToRejections, "listen-to-rejections", false, "whether to listen to rejection events")
 	flag.StringVar(&chaincodeID, "events-from-chaincode", "", "listen to events from given chaincode default listen all")
 	flag.StringVar(&chaincodeIdToSend, "send-to-chaincode", "", "send to given chaincode default equal as -events-from-chaincode")
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server")
 	flag.StringVar(&cpID, "CP-ID", "", "id of the cp")
+	flag.IntVar(&percent, "percent", 100, "Percentage of chance of having the content default 100")
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 	fmt.Printf("Event Address: %s\n", eventAddress)
@@ -148,7 +150,7 @@ func main() {
 			fmt.Printf("------------------------\n")
 			fmt.Printf("Chaincode Event:%v\n", ce)
 			eventContract := content_contract_common.EventContract{}
-			if analyse(ce, &eventContract) {
+			if analyse(ce, &eventContract, percent) {
 				userContractForCP := getUserContract(eventContract.Sha, restAddress, chaincodeID)
 
 				userReturnID := ce.ChaincodeEvent.TxID
@@ -208,7 +210,7 @@ func getUserContract(userContractSha string, restAddress string, chaincodeID str
 }
 
 //analyse what is the value as change
-func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract) bool {
+func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract, percent int) bool {
 	fmt.Println("██████████████████████████Analyse--contract██████████████████████████")
 	data := event.ChaincodeEvent.Payload
 	err := json.Unmarshal([]byte(data), &eventContract)
@@ -224,8 +226,7 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 	}
 
 	//verify if we have a licence for this content
-	//TODO: edit this value to have a real random
-	if (rand.Intn(10) < 0) {
+	if (rand.Intn(100) > percent) {
 		fmt.Println("We don't have content")
 		return false
 	}
@@ -236,8 +237,8 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 func createCPContract(userContractForCP content_contract_common.UserContractForCP, userReturnID string, userContractID string, cpID string, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
-	price := rand.Intn(5000)
-	priceMax := price + rand.Intn(1000)
+	price := 1000
+	priceMax := 2000
 	cPContract := content_contract_common.CPContract{
 		CPId:cpID,
 		TimestampMax:userContractForCP.TimestampMax,
