@@ -322,13 +322,24 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 		fmt.Println("1th contract")
 		err = stub.PutState(teContract.UserReturnID, []byte(args[0]))
 		return nil, err
+
+		event := &EventContract{
+			TypeContract:"FINAL",
+			Id:teContract.UserReturnID}
+		toSend, _ := json.Marshal(event)
+
+		fmt.Println("--------------Send-event--------------")
+		err = stub.SetEvent("evtsender", toSend)
+		if err != nil {
+			return nil, err
+		}
 	}
 	teContractOld := TEContract{}
 	if err := json.Unmarshal(valAsbytes, &teContractOld); err != nil {
 		return nil, err
 	}
 	if teContract.Price >= teContractOld.Price {
-		fmt.Printf("more expensive %d > %d\n",teContract.Price,teContractOld.Price)
+		fmt.Printf("more expensive %d > %d\n", teContract.Price, teContractOld.Price)
 		return nil, err
 	}
 	//fmt.Printf("less expensienve %d > %d\n",teContract.Price,teContractOld.Price)
@@ -338,9 +349,25 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 	//	return nil, err
 	//}
 	//if isOk {
-		fmt.Printf("new contract less expensive %d > %d \n",teContract.Price,teContractOld.Price)
-		err = stub.PutState(teContract.UserReturnID, []byte(args[0]))
+	fmt.Printf("new contract less expensive %d > %d \n", teContract.Price, teContractOld.Price)
+	err = stub.PutState(teContract.UserReturnID, []byte(args[0]))
+	if err != nil {
 		return nil, err
+	}
+
+	event := &EventContract{
+		TypeContract:"FINAL",
+		Id:teContract.UserReturnID}
+	toSend, _ := json.Marshal(event)
+
+	fmt.Println("--------------Send-event--------------")
+	err = stub.SetEvent("evtsender", toSend)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 	//}
 	//return nil, errors.New("The value have change need to change this code!!!")
 }
