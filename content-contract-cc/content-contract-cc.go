@@ -321,8 +321,9 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 	if valAsbytes == nil {
 		fmt.Println("1th contract")
 		err = stub.PutState(teContract.UserReturnID, []byte(args[0]))
-		return nil, err
 
+		//SEND A EVENT TO THE USER
+		// a 1th contract is coming
 		event := &EventContract{
 			TypeContract:"FINAL",
 			Id:teContract.UserReturnID}
@@ -333,6 +334,7 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 		if err != nil {
 			return nil, err
 		}
+		return nil, err
 	}
 	teContractOld := TEContract{}
 	if err := json.Unmarshal(valAsbytes, &teContractOld); err != nil {
@@ -354,18 +356,18 @@ func (t *SimpleChaincode) contentDeliveryContract(stub shim.ChaincodeStubInterfa
 	if err != nil {
 		return nil, err
 	}
-
-	event := &EventContract{
-		TypeContract:"FINAL",
-		Id:teContract.UserReturnID}
-	toSend, _ := json.Marshal(event)
-
-	fmt.Println("--------------Send-event--------------")
-	err = stub.SetEvent("evtsender", toSend)
-
-	if err != nil {
-		return nil, err
-	}
+	////SEND A EVENT TO THE USER
+	//event := &EventContract{
+	//	TypeContract:"FINAL",
+	//	Id:teContract.UserReturnID}
+	//toSend, _ := json.Marshal(event)
+	//
+	//fmt.Println("--------------Send-event--------------")
+	//err = stub.SetEvent("evtsender", toSend)
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return nil, nil
 	//}
