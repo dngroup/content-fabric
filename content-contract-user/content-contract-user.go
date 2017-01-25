@@ -189,23 +189,23 @@ func getFinalContract(timestampMax int64, restAddress string, chaincodeID string
 }
 
 func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract, idToGetContract string) bool {
-	fmt.Println("██████████████████████████Analyse--contract██████████████████████████")
+	//fmt.Println("██████████████████████████Analyse--contract██████████████████████████")
 	data := event.ChaincodeEvent.Payload
 	err := json.Unmarshal([]byte(data), &eventContract)
 	if err != nil {
-		fmt.Println("This is not correct ")
+		//fmt.Println("This is not correct ")
 		return false
 	}
 
 	//verify if is a FINAL contract
 	if eventContract.TypeContract != "FINAL" {
-		fmt.Println("This is not for us")
+		//fmt.Println("This is not for us")
 		return false
 	}
 
 	//verify if the idToGetContract is correct
 	if (idToGetContract != eventContract.Id) {
-		fmt.Println("This is not for us")
+		//fmt.Println("This is not for us")
 		return false
 	}
 	fmt.Println("this is for us start to get contract")
