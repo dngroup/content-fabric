@@ -45,13 +45,13 @@
    - maybe you need go dependency `github.com/hyperledger/fabric/`
         - `cd $GOPATH/src/github.com/hyperledger/`
         - `git clone --branch v0.6.1-preview --single-branch --depth 1 https://github.com/hyperledger/fabric.git`
-   - edit [chainecode.go](content-contract-cc/content-contract-cc.go) for change the chainecode
+   - edit [content-contract-cc.go](content-contract-cc/content-contract-cc.go) for change the chainecode
         - build for verify if working    `go build ./`
-   - edit [user.go](content-contract-user/user.go) for change the user
+   - edit [content-contract-user.go](content-contract-user/content-contract-user.go) for change the user
         - use the script to build the new docker image
-   - edit [cp.go](content-contract-cp/content-contract-cp.go) for change the CP
+   - edit [content-contract-cp.go](content-contract-cp/content-contract-cp.go) for change the CP
         - use the script to build the new docker image
-   - edit [te.go](content-contract-te/content-contract-te.goo) for change the TE
+   - edit [content-contract-te.go](content-contract-te/content-contract-te.goo) for change the TE
         - use the script to build the new docker image
 
    

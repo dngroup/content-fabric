@@ -20,6 +20,29 @@ type TEContract struct {
 
 	TimestampTE        int64     `json:"timestampTE"`
 }
+
+type FinalContract struct {
+	TEId               string    `json:"tEId"`
+	Price              int   `json:"price"`
+	//time max after the request is deleted
+	TimestampMax       int64     `json:"timestampMax"`
+	//sha of user massage
+	ShaUser            string    `json:"sha_user"`
+	UserContractID     string    `json:"userContractID"`
+	CPContractID       string    `json:"CPContractID"`
+	UserReturnID       string    `json:"userReturnID"`
+	// random int
+	Random63           int64     `json:"random63"`
+	//use for state
+	TimestampUser      int64     `json:"timestampUser"`
+	TimestampBrokering int64     `json:"timestampBrokering"`
+	TimestampCP        int64     `json:"timestampCP"`
+	TimestampLicencing int64     `json:"timestampLicencing"`
+
+	TimestampTE        int64     `json:"timestampTE"`
+	TimestampFinal     int64     `json:"timestampFinal"`
+}
+
 type UserContract struct {
 	UserId        string    `json:"userID"`
 	ContentId     string    `json:"contentID"`
