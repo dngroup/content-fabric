@@ -1,0 +1,77 @@
+# Contant Fabric 
+
+
+## Install
+
+ We need docker and docker-compose 
+ 
+   1. start peer
+   
+   It will download the docker "hyperledger/fabric-peer"
+   ```
+   # on deamon mode
+   cd $REPONAME
+   docker-compose up -d 
+   ```
+   2. send chaincode
+   
+   ```
+   curl --request POST \
+  --url http://localhost:7050/chaincode \
+  --header 'cache-control: no-cache' \
+  --header 'content-type: application/json' \
+  --header 'postman-token: 356d6fb9-b49c-e62a-2d9b-6dc170309041' \
+  --data '{\n  "jsonrpc": "2.0",\n  "method": "deploy",\n  "params": {\n    "type": 1,\n    "chaincodeID": {\n      "path": "https://github.com/dngroup/content-fabric/content-contract-cc"\n    },\n    "ctorMsg": {\n      "function": "init",\n      "args": [\n      ]\n    }\n  },\n  "id": 1\n}'
+   ```
+   
+   2. start cp and te
+   
+   ```
+   ./start $NUMBER_INSTANCE $CHAINE_ID
+   ```
+   
+   2. start user
+   
+   ````
+   ./content-contract-cc/content-contract-cc  -userId lala -contentId bbb.mp4 -chaincodeid 4c166ef7d5220329f658ac55b4a5d3daabbf08cf10f47db5fe3aeb980ac55b2e5a42ac97fb0797f460ad770995cb1c23cec830470d1a3223a1cb885bb3580ae0 -time-max 30
+   ````
+   
+  Working in progress
+   
+## edit
+
+  We need docker and golang (v1.6)
+   
+   - maybe you need go dependency `github.com/hyperledger/fabric/`
+        - `cd $GOPATH/src/github.com/hyperledger/`
+        - `git clone --branch v0.6.1-preview --single-branch --depth 1 https://github.com/hyperledger/fabric.git`
+   - edit [content-contract-cc.go](content-contract-cc/content-contract-cc.go) for change the chainecode
+        - build for verify if working    `go build ./`
+   - edit [content-contract-user.go](content-contract-user/content-contract-user.go) for change the user
+        - use the script to build the new docker image
+   - edit [content-contract-cp.go](content-contract-cp/content-contract-cp.go) for change the CP
+        - use the script to build the new docker image
+   - edit [content-contract-te.go](content-contract-te/content-contract-te.goo) for change the TE
+        - use the script to build the new docker image
+
+   
+## more information 
+
+ to build  [https://github.com/hyperledger/fabric]() we need that
+  
+  ```
+  cd $REPONAME
+  cd /scripts/devenv && chmod +x setup.sh && sudo ./setup.sh
+  cd /tmp
+  git clone --branch v4.1 --single-branch --depth 1 https://github.com/facebook/rocksdb.git
+  cd rocksdb
+  make shared_lib
+  sudo INSTALL_PATH=/usr/local make install-shared
+  sudo ldconfig
+  sudo mkdir /var/hyperledger/ && sudo chown $USER:$USER /var/hyperledger
+  ```
+  and finally you can make 
+  ```
+  cd $REPONAME
+  make
+  ```

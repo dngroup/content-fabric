@@ -26,6 +26,10 @@ import (
 
 	"github.com/hyperledger/fabric/events/consumer"
 	pb "github.com/hyperledger/fabric/protos"
+	//"github.com/spf13/viper"
+
+	"github.com/hyperledger/fabric/core/comm"
+	"time"
 )
 
 type adapter struct {
@@ -82,7 +86,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10000*time.Millisecond, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -93,6 +97,8 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 }
 
 func main() {
+	//viper.SetDefault("peer.tls.enabled", true)
+	fmt.Println(comm.TLSEnabled())
 	var eventAddress string
 	var listenToRejections bool
 	var chaincodeID string
