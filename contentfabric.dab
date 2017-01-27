@@ -1,0 +1,94 @@
+{
+  "Services": {
+    "vp0": {
+      "Args": [
+        "sh", 
+        "-c", 
+        "peer node start "
+      ], 
+      "Env": [
+        "CORE_PEER_ID=vp0", 
+        "CORE_VM_ENDPOINT=unix:///var/run/docker.sock", 
+        "CORE_PEER_ADDRESSAUTODETECT=true", 
+        "CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft"
+      ], 
+      "Image": "dngroup/fabric-peer@sha256:5b92895dfeb53c334756c5a6d96eade3b1ef05e40167a303e0368d85e72e366b", 
+      "Networks": [
+        "default"
+      ]
+    }, 
+    "vp1": {
+      "Args": [
+        "sh", 
+        "-c", 
+        "peer node start "
+      ], 
+      "Env": [
+        "CORE_PEER_ID=vp1", 
+        "CORE_VM_ENDPOINT=unix:///var/run/docker.sock", 
+        "CORE_PEER_ADDRESSAUTODETECT=true", 
+        "CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft", 
+        "CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051"
+      ], 
+      "Image": "dngroup/fabric-peer@sha256:5b92895dfeb53c334756c5a6d96eade3b1ef05e40167a303e0368d85e72e366b", 
+      "Networks": [
+        "default"
+      ]
+    }, 
+    "vp2": {
+      "Args": [
+        "sh", 
+        "-c", 
+        "peer node start "
+      ], 
+      "Env": [
+        "CORE_PEER_ID=vp2", 
+        "CORE_VM_ENDPOINT=unix:///var/run/docker.sock", 
+        "CORE_PEER_ADDRESSAUTODETECT=true", 
+        "CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft", 
+        "CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051"
+      ], 
+      "Image": "dngroup/fabric-peer@sha256:5b92895dfeb53c334756c5a6d96eade3b1ef05e40167a303e0368d85e72e366b", 
+      "Networks": [
+        "default"
+      ]
+    }, 
+    "vp3": {
+      "Args": [
+        "sh", 
+        "-c", 
+        "peer node start "
+      ], 
+      "Env": [
+        "CORE_PEER_ID=vp3", 
+        "CORE_VM_ENDPOINT=unix:///var/run/docker.sock", 
+        "CORE_PEER_ADDRESSAUTODETECT=true", 
+        "CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft", 
+        "CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051"
+      ], 
+      "Image": "dngroup/fabric-peer@sha256:5b92895dfeb53c334756c5a6d96eade3b1ef05e40167a303e0368d85e72e366b", 
+      "Networks": [
+        "default"
+      ], 
+      "Ports": [
+        {
+          "Port": 7050, 
+          "Protocol": "tcp"
+        }, 
+        {
+          "Port": 7051, 
+          "Protocol": "tcp"
+        }, 
+        {
+          "Port": 7052, 
+          "Protocol": "tcp"
+        }, 
+        {
+          "Port": 7053, 
+          "Protocol": "tcp"
+        }
+      ]
+    }
+  }, 
+  "Version": "0.1"
+}

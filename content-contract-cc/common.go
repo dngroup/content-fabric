@@ -20,6 +20,7 @@ type TEContract struct {
 
 	TimestampTE        int64     `json:"timestampTE"`
 }
+
 type UserContract struct {
 	UserId        string    `json:"userID"`
 	ContentId     string    `json:"contentID"`
@@ -42,6 +43,7 @@ type UserContractForCP struct {
 	TimestampUser      int64     `json:"timestampUser"`
 	TimestampBrokering int64     `json:"timestampBrokering"`
 }
+
 type CPContract struct {
 	CPId               string    `json:"cPId"`
 	ContentId          string    `json:"contentID"`
@@ -95,13 +97,14 @@ type Response struct {
 			Status  string `json:"status"`
 			Message string `json:"message"`
 		} `json:"result"`
+
 	ID      int `json:"id"`
 }
 type Request struct {
-	Jsonrpc string `json:"jsonrpc"`
-	Method  string `json:"method"`
-	Params  Params `json:"params"`
-	ID      int `json:"id"`
+	Jsonrpc       string `json:"jsonrpc"`
+	Method        string `json:"method"`
+	Params        Params `json:"params"`
+	ID            int `json:"id"`
 }
 
 type Params struct {

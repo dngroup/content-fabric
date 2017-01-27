@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/spf13/viper"
 	"flag"
 	"fmt"
 	"github.com/hyperledger/fabric/events/consumer"
@@ -77,6 +78,8 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	return adapter
 }
 
+var tls bool
+
 func main() {
 	fmt.Printf("Starting\n")
 	var eventAddress string
@@ -85,6 +88,7 @@ func main() {
 	var chaincodeID string
 	var timeMax int
 	var restAddress string
+
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server (chaincode)")
 	flag.StringVar(&chaincodeID, "chaincodeid", "", "chaincode Id to send the new contract")
 
@@ -92,7 +96,11 @@ func main() {
 	flag.StringVar(&contentId, "contentId", "content", "the contentId of the content")
 	flag.IntVar(&timeMax, "time-max", 10, "the timestamp max to get start the video allow by the user of the content default to 10s")
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
+	flag.BoolVar(&tls, "tls", false, "use tls")
 	flag.Parse()
+	if tls {
+		viper.SetDefault("peer.tls.enabled", true)
+	}
 
 	contract := createContract(userId, contentId, timeMax)
 
@@ -139,12 +147,21 @@ func getFinalContract(timestampMax int64, restAddress string, chaincodeID string
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
-				Args:[]string{idToGetContract}}},
+				Args:[]string{idToGetContract}},
+			SecureContext:"admin"},
+
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payloadQuery)
 
-	url := "http://" + restAddress + "/chaincode"
+	var url string
+	if tls {
+
+		url = "https://" + restAddress + "/chaincode"
+	} else {
+
+		url = "http://" + restAddress + "/chaincode"
+	}
 	req, _ := http.NewRequest("POST", url, nil)
 	req.Header.Add("content-type", "application/json")
 	for time.Now().Unix() < timestampMax + 2 {
@@ -221,7 +238,14 @@ func sendContract(contract content_contract_common.UserContract, restAddress str
 	fmt.Println("----------------------------JSON-Object----------------------------")
 	//fmt.Println(string(contractOnJson))
 	//create the request
-	url := "http://" + restAddress + "/chaincode"
+	url := ""
+	if tls {
+
+		url = "https://" + restAddress + "/chaincode"
+	} else {
+
+		url = "http://" + restAddress + "/chaincode"
+	}
 
 
 
@@ -243,7 +267,9 @@ func sendContract(contract content_contract_common.UserContract, restAddress str
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-brokering-contract",
-				Args:[]string{string(contractJson)}}},
+				Args:[]string{string(contractJson)}},
+			SecureContext:"admin"},
+
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payload)

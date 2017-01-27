@@ -18,6 +18,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"github.com/dngroup/content-fabric/content-contract-common"
+	"github.com/spf13/viper"
 )
 
 type adapter struct {
@@ -94,6 +95,7 @@ func main() {
 	var teID string
 	var percent int
 	var pricePercent int
+	var tls bool
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.BoolVar(&listenToRejections, "listen-to-rejections", false, "whether to listen to rejection events")
 	flag.StringVar(&chaincodeID, "events-from-chaincode", "", "listen to events from given chaincode default listen all")
@@ -102,8 +104,11 @@ func main() {
 	flag.StringVar(&teID, "TE-ID", "", "id of the te")
 	flag.IntVar(&percent, "percent", 100, "Percentage of chance of having the content default 100")
 	flag.IntVar(&pricePercent, "percent-price", 100, "Percentage of chance of having a price lower than the maximum price default 100")
+	flag.BoolVar(&tls, "tls", false, "use tls")
 	flag.Parse()
-
+	if tls {
+		viper.SetDefault("peer.tls.enabled", true)
+	}
 	rand.Seed(time.Now().UnixNano())
 	fmt.Printf("Event Address: %s\n", eventAddress)
 
@@ -198,7 +203,9 @@ func getCPContract(CPContractSha string, restAddress string, chaincodeID string)
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
-				Args:[]string{CPContractSha}}},
+				Args:[]string{CPContractSha}},
+			SecureContext:"admin"},
+
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payload)
@@ -307,7 +314,9 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-delevery-contract",
-				Args:[]string{string(contractJson)}}},
+				Args:[]string{string(contractJson)}},
+			SecureContext:"admin"},
+
 		ID:1}
 
 	jsonpPayload, _ := json.Marshal(payload)

@@ -9,7 +9,8 @@ ENV CHAINCODE=fb35eb0071ba47fdcf7ce76359e9f9e4c847a74d8bf0187c1a79ce3468322d3785
 ENV USERID=LALA
 ENV CONTENTID=BBB.mp4
 ENV TIMEMAX=10
+ENV TLS=false
 COPY content-contract-user content-contract-user
 
 #RUN ./b
-CMD ./content-contract-user -userId ${USERID} -contentId ${CONTENTID} -chaincodeid ${CHAINCODE} -time-max=${TIMEMAX} -rest-address=${PEERADDR}:${REST_PORT} -events-address=${PEERADDR}:${EVENT_PORT}
+CMD ./content-contract-user -tls=${TLS} -userId=${USERID} -contentId=${CONTENTID} -chaincodeid=${CHAINCODE} -time-max=${TIMEMAX} -rest-address=${PEERADDR}:${REST_PORT} -events-address=${PEERADDR}:${EVENT_PORT}
