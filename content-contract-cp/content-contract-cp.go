@@ -18,6 +18,10 @@ import (
 	"encoding/base64"
 
 	"github.com/dngroup/content-fabric/content-contract-common"
+	//"github.com/spf13/viper"
+	//"github.com/hyperledger/fabric/vendor/github.com/spf13/viper"
+	//"strings"
+	"github.com/hyperledger/fabric/core/comm"
 )
 
 type adapter struct {
@@ -74,7 +78,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10*time.Second, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -84,7 +88,13 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	return adapter
 }
 
+var tls bool
+
 func main() {
+	viper.Set("peer.tls.enabled", true)
+	fmt.Println(viper.GetBool("peer.tls.enabled"))
+	fmt.Println(comm.TLSEnabled())
+
 	var eventAddress string
 	var listenToRejections bool
 	var chaincodeID string
@@ -92,6 +102,7 @@ func main() {
 	var restAddress string
 	var cpID string
 	var percent int
+
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.BoolVar(&listenToRejections, "listen-to-rejections", false, "whether to listen to rejection events")
 	flag.StringVar(&chaincodeID, "events-from-chaincode", "", "listen to events from given chaincode default listen all")
@@ -99,7 +110,17 @@ func main() {
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server")
 	flag.StringVar(&cpID, "CP-ID", "", "id of the cp")
 	flag.IntVar(&percent, "percent", 100, "Percentage of chance of having the content default 100")
+	flag.BoolVar(&tls, "tls", false, "use tls")
 	flag.Parse()
+	if tls {
+		//fmt.Printf(strings.Trim(fmt.Sprintf(flag.Args()), "[]"))
+		//fmt.Printf(flag.Args())
+		fmt.Println("Use TLS")
+		viper.SetDefault("peer.tls.enabled", true)
+	}
+	fmt.Println(comm.TLSEnabled())
+
+
 	rand.Seed(time.Now().UnixNano())
 	fmt.Printf("Event Address: %s\n", eventAddress)
 
@@ -161,7 +182,14 @@ func main() {
 }
 func getUserContract(userContractSha string, restAddress string, chaincodeID string) content_contract_common.UserContractForCP {
 	fmt.Println("██████████████████████████Get-User-contract██████████████████████████")
-	url := "http://" + restAddress + "/chaincode"
+	var url string
+	if tls {
+
+		url = "https://" + restAddress + "/chaincode"
+	} else {
+
+		url = "http://" + restAddress + "/chaincode"
+	}
 
 
 	//payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"query\", \"params\": { \"type\": 1, \"chaincodeID\":{ \"name\":\"" +
@@ -178,7 +206,9 @@ func getUserContract(userContractSha string, restAddress string, chaincodeID str
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
-				Args:[]string{userContractSha}}},
+				Args:[]string{userContractSha}},
+			SecureContext:"admin"},
+
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payload)
@@ -267,7 +297,15 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 	fmt.Println("----------------------------JSON-Object----------------------------")
 	fmt.Println(string(contractJson))
 	//create the request
-	url := "http://" + restAddress + "/chaincode"
+	var url string
+	if tls {
+
+		url = "https://" + restAddress + "/chaincode"
+	} else {
+
+		url = "http://" + restAddress + "/chaincode"
+	}
+
 
 	//payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"invoke\", \"params\": { \"type\": 1, \"chaincodeID\": { \"name\": \"" +
 	//	chaincodeID +
@@ -285,7 +323,8 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 				Name:chaincodeID},
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-licencing-contract",
-				Args:[]string{string(contractJson)}}},
+				Args:[]string{string(contractJson)}},
+			SecureContext:"admin"},
 		ID:1}
 
 	jsonpPayload, _ := json.Marshal(payload)

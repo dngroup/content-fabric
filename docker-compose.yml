@@ -7,28 +7,40 @@ services:
       - CORE_PEER_ADDRESSAUTODETECT=true
       - CORE_VM_ENDPOINT=unix:///var/run/docker.sock
       - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft
+      - CORE_PBFT_GENERAL_TIMEOUT_BATCH=2s
+      - CORE_PBFT_GENERAL_TIMEOUT_REQUEST=30s
+      - CORE_PBFT_GENERAL_TIMEOUT_VIEWCHANGE=30s
+      - CORE_PBFT_GENERAL_TIMEOUT_RESENDVIEWCHANGE=30s
 #      - CORE_LOGGING_LEVEL=DEBUG
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: sh -c "peer node start "
+    cap_add:
+      - NET_ADMIN
+    command: sh -c "tc qdisc add dev eth0 root netem delay 40ms && peer node start"
 
   vp1:
     extends: vp0
     environment:
       - CORE_PEER_ID=vp1
       - CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051
-    command: sh -c "peer node start "
+    cap_add:
+      - NET_ADMIN
+    command: sh -c "tc qdisc add dev eth0 root netem delay 40ms && sleep 1 && peer node start"
   vp2:
     extends: vp0
     environment:
       - CORE_PEER_ID=vp2
       - CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051
-    command: sh -c "peer node start "
+    cap_add:
+      - NET_ADMIN
+    command: sh -c "tc qdisc add dev eth0 root netem delay 40ms && sleep 1 && peer node start"
   vp3:
     extends: vp0
     environment:
       - CORE_PEER_ID=vp3
       - CORE_PEER_DISCOVERY_ROOTNODE=vp0:7051
+    cap_add:
+      - NET_ADMIN
     ports:
       - 7050-7053:7050-7053
-    command: sh -c "peer node start "
+    command: sh -c "tc qdisc add dev eth0 root netem delay 40ms && sleep 1 && peer node start"
