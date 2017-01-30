@@ -25,6 +25,7 @@ do
         -e EVENT_PORT=31003 \
         dngroup/content-contract-cp
 done
+
 for ((number=1; number<=$1;number++))
 do
 #    docker rm -f cp${number}

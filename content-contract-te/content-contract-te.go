@@ -145,26 +145,17 @@ func main() {
 
 	for {
 		select {
-		case b := <-a.notfy:
-			fmt.Printf("\n")
-			fmt.Printf("\n")
-			fmt.Printf("Received block\n")
-			fmt.Printf("--------------\n")
-			for _, r := range b.Block.Transactions {
-				fmt.Printf("Transaction:\n\t[%v]\n", r)
-			}
-		case r := <-a.rejected:
-			fmt.Printf("\n")
-			fmt.Printf("\n")
-			fmt.Printf("Received rejected transaction\n")
-			fmt.Printf("--------------\n")
-			fmt.Printf("Transaction error:\n%s\t%s\n", r.Rejection.Tx.Txid, r.Rejection.ErrorMsg)
+
+		case <-a.notfy:
+			break
+		case <-a.rejected:
+			break
 		case ce := <-a.cEvent:
-			fmt.Printf("\n")
-			fmt.Printf("\n")
-			fmt.Printf("Received chaincode event\n")
-			fmt.Printf("------------------------\n")
-			fmt.Printf("Chaincode Event:%v\n", ce)
+		//fmt.Printf("\n")
+		//fmt.Printf("\n")
+		//fmt.Printf("Received chaincode event\n")
+		//fmt.Printf("------------------------\n")
+		//fmt.Printf("Chaincode Event:%v\n", ce)
 			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract, percent) {
 				cPContractForTE := getCPContract(user, tlsbool, eventContract.Sha, restAddress, chaincodeID)
@@ -292,10 +283,15 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 		Price:price,
 		CPContractID:CPContractID,
 		TimestampBrokering:cPContractForTE.TimestampBrokering,
+		TimestampBrokeringNano:cPContractForTE.TimestampBrokeringNano,
 		TimestampUser:cPContractForTE.TimestampUser,
+		TimestampUserNano:cPContractForTE.TimestampUserNano,
 		TimestampCP:cPContractForTE.TimestampCP,
+		TimestampCPNano:cPContractForTE.TimestampCPNano,
 		TimestampLicencing:cPContractForTE.TimestampLicencing,
-		TimestampTE:time.Now().Unix()        }
+		TimestampLicencingNano:cPContractForTE.TimestampLicencingNano,
+		TimestampTE:time.Now().Unix(),
+		TimestampTENano:time.Now().UnixNano()        }
 	fmt.Println("-----------------------------Raw-Object----------------------------")
 	fmt.Println(tEContract)
 	//convert to json

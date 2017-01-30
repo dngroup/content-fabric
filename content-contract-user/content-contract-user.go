@@ -112,18 +112,18 @@ func main() {
 
 
 	//Create a listener to wait for the 1st contract
-	a := createEventClient(eventAddress, false, chaincodeID)
+	adapter := createEventClient(eventAddress, false, chaincodeID)
 	for time.Now().Unix() < contract.TimestampMax + 1 {
 		fmt.Printf("-")
 		select {
 
-		case <-a.notfy:
+		case <-adapter.notfy:
 			break
-		case <-a.rejected:
+		case <-adapter.rejected:
 			break
-		case ce := <-a.cEvent:
+		case ce := <-adapter.cEvent:
 			eventContract := content_contract_common.EventContract{}
-			if analyse(ce, &eventContract, idToGetContract) {
+			if isContractForUs(ce, &eventContract, idToGetContract) {
 				userContractForCP := getFinalContract(user, contract.TimestampMax, restAddress, chaincodeID, idToGetContract)
 				fmt.Println(userContractForCP)
 				return
@@ -193,8 +193,11 @@ func getFinalContract(user string, timestampMax int64, restAddress string, chain
 			finalContract := content_contract_common.FinalContract{}
 			json.Unmarshal([]byte(response.Result.Message), &finalContract)
 			finalContract.TimestampFinal = time.Now().Unix()
+			finalContract.TimestampFinalNano = time.Now().UnixNano()
 			fmt.Println("-------------------------final-contract-json--------------------------------")
 			finalContractjson, _ := json.Marshal(finalContract)
+			timeTotal:=finalContract.TimestampFinalNano-finalContract.TimestampUserNano
+			fmt.Printf("TOTAL TIME timeTotal %d nS",timeTotal)
 			//fmt.Println(finalContractjson)
 			return string(finalContractjson)
 
@@ -207,7 +210,7 @@ func getFinalContract(user string, timestampMax int64, restAddress string, chain
 
 }
 
-func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract, idToGetContract string) bool {
+func isContractForUs(event *pb.Event_ChaincodeEvent, eventContract *content_contract_common.EventContract, idToGetContract string) bool {
 	//fmt.Println("██████████████████████████Analyse--contract██████████████████████████")
 	data := event.ChaincodeEvent.Payload
 	err := json.Unmarshal([]byte(data), &eventContract)
@@ -287,9 +290,6 @@ func sendContract(user string, contract content_contract_common.UserContract, re
 	req.Header.Add("content-type", "application/json")
 	res, _ := http.DefaultClient.Do(req)
 
-
-
-
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	fmt.Println("--------------------------------SEND--------------------------------")
@@ -314,7 +314,8 @@ func createContract(userId string, contentId string, timeMax int) content_contra
 		UserId:userId,
 		ContentId:contentId,
 		TimestampMax:time.Now().Add(time.Duration(timeMax) * time.Second).Unix(),
-		TimestampUser:time.Now().Unix()}
+		TimestampUser:time.Now().Unix(),
+		TimestampUserNano:time.Now().UnixNano()}
 	fmt.Println("-----------------------------Raw-Object----------------------------")
 	fmt.Println(contract)
 	//convert to json

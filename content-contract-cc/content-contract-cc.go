@@ -172,6 +172,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 	//timestampMax := dat["timestampMax"].(int64)
 	//timestampUser := dat["timestampUser"].(int64)
 	timestamp := time.Now().Unix()
+	timestampNano := time.Now().Nanosecond()
 	//verify if the contract is correct
 	if timestamp >= userContract.TimestampMax {
 		return nil, errors.New("Contract to old " + time.Unix(userContract.TimestampMax, 0).String() + ". " +
@@ -184,8 +185,10 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 		ShaUser: shaUser,
 		Random63:rand.Int63(),
 		TimestampMax:   userContract.TimestampMax,
+		TimestampUserNano: userContract.TimestampUserNano,
 		TimestampUser: userContract.TimestampUser,
-		TimestampBrokering: timestamp}
+		TimestampBrokering: timestamp,
+		TimestampBrokeringNano: timestampNano}
 	contractJson, _ := json.Marshal(contract)
 	shaByte = sha256.Sum256(contractJson)
 	shaContract := base64.StdEncoding.EncodeToString(shaByte[:])
@@ -235,6 +238,8 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 	//timestampMax := dat["timestampMax"].(int64)
 	//timestampUser := dat["timestampUser"].(int64)
 	timestamp := time.Now().Unix()
+	timestampNano := time.Now().UnixNano()
+
 	//verify if the contract is correct
 	if timestamp >= cPContract.TimestampMax {
 		return nil, errors.New("Contract to old " + time.Unix(cPContract.TimestampMax, 0).String() + ". " +
@@ -249,11 +254,15 @@ func (t *SimpleChaincode) contentLicencingContract(stub shim.ChaincodeStubInterf
 		Random63:rand.Int63(),
 		TimestampMax:   cPContract.TimestampMax,
 		TimestampUser: cPContract.TimestampUser,
+		TimestampUserNano: cPContract.TimestampUserNano,
 		TimestampBrokering: cPContract.TimestampBrokering,
+		TimestampBrokeringNano: cPContract.TimestampBrokeringNano,
 		LicencingId:cPContract.LicencingId,
 		TimestampCP:cPContract.TimestampCP,
+		TimestampCPNano:cPContract.TimestampCPNano,
 		UserReturnID:cPContract.UserReturnID,
 		TimestampLicencing:timestamp,
+		TimestampLicencingNano:timestampNano,
 		PriceMax:cPContract.PriceMax,
 		Price:cPContract.Price}
 	contractJson, _ := json.Marshal(contract)
