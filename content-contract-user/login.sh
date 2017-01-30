@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-url=https://d0ffb689045e4dfeb25fd8df4bafca84-vp$2.us.blockchain.ibm.com:5002
+url=https://9dbf187e9e4247e2a59e122e812101f6-vp$2.us.blockchain.ibm.com:5003
 l=$(sed -n "$(($1+3)) p" user.csv)
 echo $l
 login=$(echo ${l} | cut -b -12 )
