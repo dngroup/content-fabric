@@ -172,7 +172,7 @@ func (t *SimpleChaincode) contentBrokeringContract(stub shim.ChaincodeStubInterf
 	//timestampMax := dat["timestampMax"].(int64)
 	//timestampUser := dat["timestampUser"].(int64)
 	timestamp := time.Now().Unix()
-	timestampNano := time.Now().Nanosecond()
+	timestampNano := time.Now().UnixNano()
 	//verify if the contract is correct
 	if timestamp >= userContract.TimestampMax {
 		return nil, errors.New("Contract to old " + time.Unix(userContract.TimestampMax, 0).String() + ". " +
