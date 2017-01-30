@@ -12,10 +12,7 @@ import (
 	"io/ioutil"
 	"github.com/dngroup/content-fabric/content-contract-common"
 	"bytes"
-
-	"crypto/tls"
 	"os"
-	"net/url"
 )
 
 type adapter struct {
@@ -280,20 +277,24 @@ func sendContract(user string, contract content_contract_common.UserContract, re
 	jsonpPayload, _ := json.Marshal(payload)
 
 	req, _ := http.NewRequest("POST", urltosend, bytes.NewReader(jsonpPayload))
-	proxyUrl, err := url.Parse("http://localhost:8080")
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy: http.ProxyURL(proxyUrl)        }
-	client := &http.Client{Transport: tr}
-
+	//proxyUrl, err := url.Parse("http://localhost:8080")
+	//tr := &http.Transport{
+	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	//	Proxy: http.ProxyURL(proxyUrl)        }
+	//client := &http.Client{Transport: tr}
+	//req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonpPayload))
+	//res, err := client.Do(req)
 	req.Header.Add("content-type", "application/json")
+	res, _ := http.DefaultClient.Do(req)
 
-	res, err := client.Do(req)
+
+
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	fmt.Println("--------------------------------SEND--------------------------------")
 	fmt.Println(string(jsonpPayload))
+	fmt.Println("to: ", urltosend)
 	fmt.Println("-------------------------------RECIVE-------------------------------")
 	fmt.Println(res)
 	fmt.Println(string(body))

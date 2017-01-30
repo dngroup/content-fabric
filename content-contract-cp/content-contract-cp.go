@@ -23,8 +23,6 @@ import (
 	//"strings"
 	"github.com/hyperledger/fabric/core/comm"
 	"strings"
-	"net/url"
-	"crypto/tls"
 )
 
 type adapter struct {
@@ -218,16 +216,20 @@ func getUserContract(userContractSha string, user string, restAddress string, ch
 
 	jsonpPayload, _ := json.Marshal(payload)
 	req, _ := http.NewRequest("POST", urlToGEt, bytes.NewReader(jsonpPayload))
-
-	proxyUrl, _ := url.Parse("http://localhost:8080")
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy: http.ProxyURL(proxyUrl)        }
-	client := &http.Client{Transport: tr}
+	//
+	//proxyUrl, _ := url.Parse("http://localhost:8080")
+	//tr := &http.Transport{
+	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	//	Proxy: http.ProxyURL(proxyUrl)        }
+	//client := &http.Client{Transport: tr}
+	//
+	//req.Header.Add("content-type", "application/json")
+	//
+	//res, _ := client.Do(req)
 
 	req.Header.Add("content-type", "application/json")
 
-	res, _ := client.Do(req)
+	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -343,13 +345,14 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 
 	req.Header.Add("content-type", "application/json")
 
-	proxyUrl, _ := url.Parse("http://localhost:8080")
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		Proxy: http.ProxyURL(proxyUrl)        }
-	client := &http.Client{Transport: tr}
-
-	res, _ := client.Do(req)
+	//proxyUrl, _ := url.Parse("http://localhost:8080")
+	//tr := &http.Transport{
+	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	//	Proxy: http.ProxyURL(proxyUrl)        }
+	//client := &http.Client{Transport: tr}
+	//
+	//res, _ := client.Do(req)
+	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)

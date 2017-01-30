@@ -96,7 +96,7 @@ func main() {
 	var teID string
 	var percent int
 	var pricePercent int
-	var tls bool
+	var tlsbool bool
 	var user string
 	flag.StringVar(&user, "user", "admin", "id of the user (default admin)")
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
@@ -107,9 +107,9 @@ func main() {
 	flag.StringVar(&teID, "TE-ID", "", "id of the te")
 	flag.IntVar(&percent, "percent", 100, "Percentage of chance of having the content default 100")
 	flag.IntVar(&pricePercent, "percent-price", 100, "Percentage of chance of having a price lower than the maximum price default 100")
-	flag.BoolVar(&tls, "tls", false, "use tls")
+	flag.BoolVar(&tlsbool, "tls", false, "use tls")
 	flag.Parse()
-	if tls {
+	if tlsbool {
 		//fmt.Printf(strings.Trim(fmt.Sprintf(flag.Args()), "[]"))
 		//fmt.Printf(flag.Args())
 		fmt.Println("Use TLS")
@@ -167,12 +167,12 @@ func main() {
 			fmt.Printf("Chaincode Event:%v\n", ce)
 			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract, percent) {
-				cPContractForTE := getCPContract(user,eventContract.Sha, restAddress, chaincodeID)
+				cPContractForTE := getCPContract(user, tlsbool, eventContract.Sha, restAddress, chaincodeID)
 				price := verifyAndGetPrice(cPContractForTE, pricePercent)
 				if price >= 0 {
 					fmt.Printf("Price = %d\n", price)
 					//userReturnID := ce.ChaincodeEvent.TxID
-					createCPContract(cPContractForTE, eventContract.Sha, teID,user, price, restAddress, chaincodeIdToSend, )
+					createCPContract(cPContractForTE, eventContract.Sha, teID, user, price, tlsbool, restAddress, chaincodeIdToSend, )
 				}
 			}
 		}
@@ -191,9 +191,16 @@ func verifyAndGetPrice(contract content_contract_common.CPContractForTE, pricePe
 	return -1
 }
 
-func getCPContract(user string,CPContractSha string, restAddress string, chaincodeID string) content_contract_common.CPContractForTE {
+func getCPContract(user string, tlsbool bool, CPContractSha string, restAddress string, chaincodeID string) content_contract_common.CPContractForTE {
 	fmt.Println("██████████████████████████ Get-CP-contract ██████████████████████████")
-	url := "http://" + restAddress + "/chaincode"
+	var url string
+	if tlsbool {
+
+		url = "https://" + restAddress + "/chaincode"
+	} else {
+
+		url = "http://" + restAddress + "/chaincode"
+	}
 
 
 	//payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"query\", \"params\": { \"type\": 1, \"chaincodeID\":{ \"name\":\"" +
@@ -269,7 +276,7 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 }
 
-func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string,user string, price int, restAddress string, chaincodeID string) {
+func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string, user string, price int, tlsbool bool, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
 	tEContract := content_contract_common.TEContract{
 		TEId:teID,
@@ -303,7 +310,14 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 	fmt.Println("----------------------------JSON-Object----------------------------")
 	fmt.Println(string(contractJson))
 	//create the request
-	url := "http://" + restAddress + "/chaincode"
+	var url string
+	if tlsbool {
+
+		url = "https://" + restAddress + "/chaincode"
+	} else {
+
+		url = "http://" + restAddress + "/chaincode"
+	}
 
 	//payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"invoke\", \"params\": { \"type\": 1, \"chaincodeID\": { \"name\": \"" +
 	//	chaincodeID +
