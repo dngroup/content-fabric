@@ -10,7 +10,9 @@ ENV CHAINCODE=fb35eb0071ba47fdcf7ce76359e9f9e4c847a74d8bf0187c1a79ce3468322d3785
 ENV PERCENT=100
 ENV PERCENTPRICE=100
 ENV TLS=false
+ENV USER=admin
+
 COPY content-contract-te content-contract-te
 
 #RUN ./b
-CMD ./content-contract-te  -tls=${TLS}  -events-address=${PEERADDR}:${EVENT_PORT} -events-from-chaincode=${CHAINCODE} -TE-ID=${TE-ID}  -percent=${PERCENT}  -percent-price=${PERCENTPRICE} -rest-address=${PEERADDR}:${REST_PORT}
+CMD ./content-contract-te -user=${USER}  -tls=${TLS}  -events-address=${PEERADDR}:${EVENT_PORT} -events-from-chaincode=${CHAINCODE} -TE-ID=${TE-ID}  -percent=${PERCENT}  -percent-price=${PERCENTPRICE} -rest-address=${PEERADDR}:${REST_PORT}

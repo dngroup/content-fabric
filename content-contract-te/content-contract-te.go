@@ -19,6 +19,7 @@ import (
 	"encoding/base64"
 	"github.com/dngroup/content-fabric/content-contract-common"
 	"github.com/spf13/viper"
+	"github.com/hyperledger/fabric/core/comm"
 )
 
 type adapter struct {
@@ -76,7 +77,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10 * time.Second, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -96,6 +97,8 @@ func main() {
 	var percent int
 	var pricePercent int
 	var tls bool
+	var user string
+	flag.StringVar(&user, "user", "admin", "id of the user (default admin)")
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.BoolVar(&listenToRejections, "listen-to-rejections", false, "whether to listen to rejection events")
 	flag.StringVar(&chaincodeID, "events-from-chaincode", "", "listen to events from given chaincode default listen all")
@@ -107,8 +110,12 @@ func main() {
 	flag.BoolVar(&tls, "tls", false, "use tls")
 	flag.Parse()
 	if tls {
+		//fmt.Printf(strings.Trim(fmt.Sprintf(flag.Args()), "[]"))
+		//fmt.Printf(flag.Args())
+		fmt.Println("Use TLS")
 		viper.SetDefault("peer.tls.enabled", true)
 	}
+	fmt.Println(comm.TLSEnabled())
 	rand.Seed(time.Now().UnixNano())
 	fmt.Printf("Event Address: %s\n", eventAddress)
 
@@ -160,12 +167,12 @@ func main() {
 			fmt.Printf("Chaincode Event:%v\n", ce)
 			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract, percent) {
-				cPContractForTE := getCPContract(eventContract.Sha, restAddress, chaincodeID)
+				cPContractForTE := getCPContract(user,eventContract.Sha, restAddress, chaincodeID)
 				price := verifyAndGetPrice(cPContractForTE, pricePercent)
 				if price >= 0 {
 					fmt.Printf("Price = %d\n", price)
 					//userReturnID := ce.ChaincodeEvent.TxID
-					createCPContract(cPContractForTE, eventContract.Sha, teID, price, restAddress, chaincodeIdToSend, )
+					createCPContract(cPContractForTE, eventContract.Sha, teID,user, price, restAddress, chaincodeIdToSend, )
 				}
 			}
 		}
@@ -184,7 +191,7 @@ func verifyAndGetPrice(contract content_contract_common.CPContractForTE, pricePe
 	return -1
 }
 
-func getCPContract(CPContractSha string, restAddress string, chaincodeID string) content_contract_common.CPContractForTE {
+func getCPContract(user string,CPContractSha string, restAddress string, chaincodeID string) content_contract_common.CPContractForTE {
 	fmt.Println("██████████████████████████ Get-CP-contract ██████████████████████████")
 	url := "http://" + restAddress + "/chaincode"
 
@@ -204,7 +211,7 @@ func getCPContract(CPContractSha string, restAddress string, chaincodeID string)
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{CPContractSha}},
-			SecureContext:"admin"},
+			SecureContext:user},
 
 		ID:2}
 
@@ -262,7 +269,7 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 }
 
-func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string, price int, restAddress string, chaincodeID string) {
+func createCPContract(cPContractForTE content_contract_common.CPContractForTE, CPContractID string, teID string,user string, price int, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
 	tEContract := content_contract_common.TEContract{
 		TEId:teID,
@@ -315,7 +322,7 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-delevery-contract",
 				Args:[]string{string(contractJson)}},
-			SecureContext:"admin"},
+			SecureContext:user},
 
 		ID:1}
 

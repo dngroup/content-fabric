@@ -12,7 +12,10 @@ import (
 	"io/ioutil"
 	"github.com/dngroup/content-fabric/content-contract-common"
 	"bytes"
+
+	"crypto/tls"
 	"os"
+	"net/url"
 )
 
 type adapter struct {
@@ -68,7 +71,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10 * time.Second, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -78,7 +81,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	return adapter
 }
 
-var tls bool
+var tlsbool bool
 
 func main() {
 	fmt.Printf("Starting\n")
@@ -88,7 +91,9 @@ func main() {
 	var chaincodeID string
 	var timeMax int
 	var restAddress string
+	var user string
 
+	flag.StringVar(&user, "user", "admin", "id of the user (default admin)")
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server (chaincode)")
 	flag.StringVar(&chaincodeID, "chaincodeid", "", "chaincode Id to send the new contract")
 
@@ -96,15 +101,15 @@ func main() {
 	flag.StringVar(&contentId, "contentId", "content", "the contentId of the content")
 	flag.IntVar(&timeMax, "time-max", 10, "the timestamp max to get start the video allow by the user of the content default to 10s")
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
-	flag.BoolVar(&tls, "tls", false, "use tls")
+	flag.BoolVar(&tlsbool, "tls", false, "use tls")
 	flag.Parse()
-	if tls {
+	if tlsbool {
 		viper.SetDefault("peer.tls.enabled", true)
 	}
 
 	contract := createContract(userId, contentId, timeMax)
 
-	response := sendContract(contract, restAddress, chaincodeID)
+	response := sendContract(user, contract, restAddress, chaincodeID)
 	idToGetContract := response.Result.Message
 	fmt.Println("██████████████████████████ Wait a result " + idToGetContract + " ██████████████████████████")
 
@@ -122,7 +127,7 @@ func main() {
 		case ce := <-a.cEvent:
 			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract, idToGetContract) {
-				userContractForCP := getFinalContract(contract.TimestampMax, restAddress, chaincodeID, idToGetContract)
+				userContractForCP := getFinalContract(user, contract.TimestampMax, restAddress, chaincodeID, idToGetContract)
 				fmt.Println(userContractForCP)
 				return
 			}
@@ -133,11 +138,11 @@ func main() {
 
 	}
 	// if no event receive try to get the contract
-	userContractForCP := getFinalContract(contract.TimestampMax, restAddress, chaincodeID, idToGetContract)
+	userContractForCP := getFinalContract(user, contract.TimestampMax, restAddress, chaincodeID, idToGetContract)
 	fmt.Println(userContractForCP)
 	return
 }
-func getFinalContract(timestampMax int64, restAddress string, chaincodeID string, idToGetContract string) string {
+func getFinalContract(user string, timestampMax int64, restAddress string, chaincodeID string, idToGetContract string) string {
 	payloadQuery := &content_contract_common.Request{
 		Jsonrpc:"2.0",
 		Method:"query",
@@ -148,14 +153,14 @@ func getFinalContract(timestampMax int64, restAddress string, chaincodeID string
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{idToGetContract}},
-			SecureContext:"admin"},
+			SecureContext:user},
 
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payloadQuery)
 
 	var url string
-	if tls {
+	if tlsbool {
 
 		url = "https://" + restAddress + "/chaincode"
 	} else {
@@ -229,7 +234,7 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 	return true
 }
 
-func sendContract(contract content_contract_common.UserContract, restAddress string, chaincodeID string) content_contract_common.Response {
+func sendContract(user string, contract content_contract_common.UserContract, restAddress string, chaincodeID string) content_contract_common.Response {
 	// use this format to enable the json on the payload json
 	contractJson, err := json.Marshal(contract)
 	if (err != nil) {
@@ -238,13 +243,13 @@ func sendContract(contract content_contract_common.UserContract, restAddress str
 	fmt.Println("----------------------------JSON-Object----------------------------")
 	//fmt.Println(string(contractOnJson))
 	//create the request
-	url := ""
-	if tls {
+	urltosend := ""
+	if tlsbool {
 
-		url = "https://" + restAddress + "/chaincode"
+		urltosend = "https://" + restAddress + "/chaincode"
 	} else {
 
-		url = "http://" + restAddress + "/chaincode"
+		urltosend = "http://" + restAddress + "/chaincode"
 	}
 
 
@@ -268,21 +273,27 @@ func sendContract(contract content_contract_common.UserContract, restAddress str
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-brokering-contract",
 				Args:[]string{string(contractJson)}},
-			SecureContext:"admin"},
+			SecureContext:user},
 
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payload)
 
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(jsonpPayload))
+	req, _ := http.NewRequest("POST", urltosend, bytes.NewReader(jsonpPayload))
+	proxyUrl, err := url.Parse("http://localhost:8080")
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		Proxy: http.ProxyURL(proxyUrl)        }
+	client := &http.Client{Transport: tr}
 
 	req.Header.Add("content-type", "application/json")
-	res, _ := http.DefaultClient.Do(req)
+
+	res, err := client.Do(req)
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	fmt.Println("--------------------------------SEND--------------------------------")
-	fmt.Println(payload)
+	fmt.Println(string(jsonpPayload))
 	fmt.Println("-------------------------------RECIVE-------------------------------")
 	fmt.Println(res)
 	fmt.Println(string(body))

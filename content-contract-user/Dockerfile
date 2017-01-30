@@ -10,7 +10,9 @@ ENV USERID=LALA
 ENV CONTENTID=BBB.mp4
 ENV TIMEMAX=10
 ENV TLS=false
+ENV USER=admin
+
 COPY content-contract-user content-contract-user
 
 #RUN ./b
-CMD ./content-contract-user -tls=${TLS} -userId=${USERID} -contentId=${CONTENTID} -chaincodeid=${CHAINCODE} -time-max=${TIMEMAX} -rest-address=${PEERADDR}:${REST_PORT} -events-address=${PEERADDR}:${EVENT_PORT}
+CMD ./content-contract-user -user=${USER}  -tls=${TLS} -userId=${USERID} -contentId=${CONTENTID} -chaincodeid=${CHAINCODE} -time-max=${TIMEMAX} -rest-address=${PEERADDR}:${REST_PORT} -events-address=${PEERADDR}:${EVENT_PORT}

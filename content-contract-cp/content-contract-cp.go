@@ -18,10 +18,13 @@ import (
 	"encoding/base64"
 
 	"github.com/dngroup/content-fabric/content-contract-common"
-	//"github.com/spf13/viper"
+	"github.com/spf13/viper"
 	//"github.com/hyperledger/fabric/vendor/github.com/spf13/viper"
 	//"strings"
 	"github.com/hyperledger/fabric/core/comm"
+	"strings"
+	"net/url"
+	"crypto/tls"
 )
 
 type adapter struct {
@@ -78,7 +81,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10*time.Second, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10 * time.Second, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -88,12 +91,12 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	return adapter
 }
 
-var tls bool
+var tlsbool bool
 
 func main() {
-	viper.Set("peer.tls.enabled", true)
-	fmt.Println(viper.GetBool("peer.tls.enabled"))
-	fmt.Println(comm.TLSEnabled())
+	//viper.Set("peer.tls.enabled", true)
+	//fmt.Println(viper.GetBool("peer.tls.enabled"))
+	//fmt.Println(comm.TLSEnabled())
 
 	var eventAddress string
 	var listenToRejections bool
@@ -102,6 +105,7 @@ func main() {
 	var restAddress string
 	var cpID string
 	var percent int
+	var user string
 
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.BoolVar(&listenToRejections, "listen-to-rejections", false, "whether to listen to rejection events")
@@ -109,17 +113,17 @@ func main() {
 	flag.StringVar(&chaincodeIdToSend, "send-to-chaincode", "", "send to given chaincode default equal as -events-from-chaincode")
 	flag.StringVar(&restAddress, "rest-address", "0.0.0.0:7050", "address of rest server")
 	flag.StringVar(&cpID, "CP-ID", "", "id of the cp")
+	flag.StringVar(&user, "user", "admin", "id of the user (default admin)")
 	flag.IntVar(&percent, "percent", 100, "Percentage of chance of having the content default 100")
-	flag.BoolVar(&tls, "tls", false, "use tls")
+	flag.BoolVar(&tlsbool, "tls", false, "use tls")
 	flag.Parse()
-	if tls {
+	if tlsbool {
 		//fmt.Printf(strings.Trim(fmt.Sprintf(flag.Args()), "[]"))
 		//fmt.Printf(flag.Args())
 		fmt.Println("Use TLS")
 		viper.SetDefault("peer.tls.enabled", true)
 	}
 	fmt.Println(comm.TLSEnabled())
-
 
 	rand.Seed(time.Now().UnixNano())
 	fmt.Printf("Event Address: %s\n", eventAddress)
@@ -172,23 +176,24 @@ func main() {
 			fmt.Printf("Chaincode Event:%v\n", ce)
 			eventContract := content_contract_common.EventContract{}
 			if analyse(ce, &eventContract, percent) {
-				userContractForCP := getUserContract(eventContract.Sha, restAddress, chaincodeID)
+				userContractForCP := getUserContract(eventContract.Sha, user, restAddress, chaincodeID)
 
 				userReturnID := ce.ChaincodeEvent.TxID
-				createCPContract(userContractForCP, userReturnID, eventContract.Sha, cpID, restAddress, chaincodeIdToSend, )
+				createCPContract(userContractForCP, userReturnID, eventContract.Sha, user, cpID, restAddress, chaincodeIdToSend, )
 			}
 		}
 	}
 }
-func getUserContract(userContractSha string, restAddress string, chaincodeID string) content_contract_common.UserContractForCP {
+func getUserContract(userContractSha string, user string, restAddress string, chaincodeID string) content_contract_common.UserContractForCP {
 	fmt.Println("██████████████████████████Get-User-contract██████████████████████████")
-	var url string
-	if tls {
+	var urlToGEt string
+	//login()
+	if tlsbool {
 
-		url = "https://" + restAddress + "/chaincode"
+		urlToGEt = "https://" + restAddress + "/chaincode"
 	} else {
 
-		url = "http://" + restAddress + "/chaincode"
+		urlToGEt = "http://" + restAddress + "/chaincode"
 	}
 
 
@@ -207,16 +212,22 @@ func getUserContract(userContractSha string, restAddress string, chaincodeID str
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{userContractSha}},
-			SecureContext:"admin"},
+			SecureContext:user},
 
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(jsonpPayload))
+	req, _ := http.NewRequest("POST", urlToGEt, bytes.NewReader(jsonpPayload))
+
+	proxyUrl, _ := url.Parse("http://localhost:8080")
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		Proxy: http.ProxyURL(proxyUrl)        }
+	client := &http.Client{Transport: tr}
 
 	req.Header.Add("content-type", "application/json")
 
-	res, _ := http.DefaultClient.Do(req)
+	res, _ := client.Do(req)
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -265,7 +276,7 @@ func analyse(event *pb.Event_ChaincodeEvent, eventContract *content_contract_com
 
 }
 
-func createCPContract(userContractForCP content_contract_common.UserContractForCP, userReturnID string, userContractID string, cpID string, restAddress string, chaincodeID string) {
+func createCPContract(userContractForCP content_contract_common.UserContractForCP, userReturnID string, userContractID string, user string, cpID string, restAddress string, chaincodeID string) {
 	fmt.Println("██████████████████████████Creat-contract██████████████████████████")
 	price := 1000
 	priceMax := 2000
@@ -297,13 +308,13 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 	fmt.Println("----------------------------JSON-Object----------------------------")
 	fmt.Println(string(contractJson))
 	//create the request
-	var url string
-	if tls {
+	var urltoSend string
+	if tlsbool {
 
-		url = "https://" + restAddress + "/chaincode"
+		urltoSend = "https://" + restAddress + "/chaincode"
 	} else {
 
-		url = "http://" + restAddress + "/chaincode"
+		urltoSend = "http://" + restAddress + "/chaincode"
 	}
 
 
@@ -324,14 +335,21 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-licencing-contract",
 				Args:[]string{string(contractJson)}},
-			SecureContext:"admin"},
+			SecureContext:user},
 		ID:1}
 
 	jsonpPayload, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(jsonpPayload))
+	req, _ := http.NewRequest("POST", urltoSend, bytes.NewReader(jsonpPayload))
 
 	req.Header.Add("content-type", "application/json")
-	res, _ := http.DefaultClient.Do(req)
+
+	proxyUrl, _ := url.Parse("http://localhost:8080")
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		Proxy: http.ProxyURL(proxyUrl)        }
+	client := &http.Client{Transport: tr}
+
+	res, _ := client.Do(req)
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -341,4 +359,24 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 	fmt.Println(res)
 	fmt.Println(string(body))
 	fmt.Println("██████████████████████████Contract-send██████████████████████████")
+}
+
+func login() {
+
+	url := "https://d0ffb689045e4dfeb25fd8df4bafca84-vp0.us.blockchain.ibm.com:5002/registrar"
+
+	payload := strings.NewReader("{\r\n  \"enrollId\": \"admin\",\r\n  \"enrollSecret\": \"6df1e6d3ac\"\r\n}")
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("content-type", "application/json")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	fmt.Println(res)
+	fmt.Println(string(body))
+
 }
