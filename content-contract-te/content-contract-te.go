@@ -77,7 +77,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10 * time.Second, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -209,7 +209,7 @@ func getCPContract(user string, tlsbool bool, CPContractSha string, restAddress 
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{CPContractSha}},
-			SecureContext:user},
+			}, //SecureContext:user},
 
 		ID:2}
 
@@ -332,7 +332,7 @@ func createCPContract(cPContractForTE content_contract_common.CPContractForTE, C
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-delevery-contract",
 				Args:[]string{string(contractJson)}},
-			SecureContext:user},
+			}, //SecureContext:user},
 
 		ID:1}
 

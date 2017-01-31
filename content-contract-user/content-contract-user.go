@@ -13,11 +13,12 @@ import (
 	"github.com/dngroup/content-fabric/content-contract-common"
 	"bytes"
 	"os"
+	"github.com/fatih/color"
 )
 
 type adapter struct {
-	notfy              chan *pb.Event_Block
-	rejected           chan *pb.Event_Rejection
+	//notfy              chan *pb.Event_Block
+	//rejected           chan *pb.Event_Rejection
 	cEvent             chan *pb.Event_ChaincodeEvent
 	listenToRejections bool
 	chaincodeID        string
@@ -39,16 +40,16 @@ func (a *adapter) GetInterestedEvents() ([]*pb.Interest, error) {
 
 //Recv implements consumer.EventAdapter interface for receiving events
 func (a *adapter) Recv(msg *pb.Event) (bool, error) {
-	if o, e := msg.Event.(*pb.Event_Block); e {
-		a.notfy <- o
-		return true, nil
-	}
-	if o, e := msg.Event.(*pb.Event_Rejection); e {
-		if a.listenToRejections {
-			a.rejected <- o
-		}
-		return true, nil
-	}
+	//if o, e := msg.Event.(*pb.Event_Block); e {
+	//	a.notfy <- o
+	//	return true, nil
+	//}
+	//if o, e := msg.Event.(*pb.Event_Rejection); e {
+	//	if a.listenToRejections {
+	//		a.rejected <- o
+	//	}
+	//	return true, nil
+	//}
 	if o, e := msg.Event.(*pb.Event_ChaincodeEvent); e {
 		a.cEvent <- o
 		return true, nil
@@ -68,7 +69,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10 * time.Second, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -150,7 +151,7 @@ func getFinalContract(user string, timestampMax int64, restAddress string, chain
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{idToGetContract}},
-			SecureContext:user},
+			}, //SecureContext:user},
 
 		ID:2}
 
@@ -197,7 +198,7 @@ func getFinalContract(user string, timestampMax int64, restAddress string, chain
 			fmt.Println("-------------------------final-contract-json--------------------------------")
 			finalContractjson, _ := json.Marshal(finalContract)
 			timeTotal:=finalContract.TimestampFinalNano-finalContract.TimestampUserNano
-			fmt.Printf("TOTAL TIME timeTotal %d nS",timeTotal)
+			fmt.Printf(color.RedString("TOTAL TIME timeTotal %d nS \n",timeTotal))
 			//fmt.Println(finalContractjson)
 			return string(finalContractjson)
 
@@ -252,7 +253,7 @@ func sendContract(user string, contract content_contract_common.UserContract, re
 		urltosend = "http://" + restAddress + "/chaincode"
 	}
 
-
+	fmt.Println("url to send: "+ urltosend)
 
 
 	//payload := strings.NewReader("{ \"jsonrpc\": \"2.0\", \"method\": \"invoke\", \"params\": { \"type\": 1, \"chaincodeID\": { \"name\": \"" +
@@ -273,13 +274,16 @@ func sendContract(user string, contract content_contract_common.UserContract, re
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-brokering-contract",
 				Args:[]string{string(contractJson)}},
-			SecureContext:user},
+			}, //SecureContext:user},
 
 		ID:2}
 
 	jsonpPayload, _ := json.Marshal(payload)
 
-	req, _ := http.NewRequest("POST", urltosend, bytes.NewReader(jsonpPayload))
+	req, err := http.NewRequest("POST", urltosend, bytes.NewReader(jsonpPayload))
+	if (err != nil) {
+		fmt.Println(err.Error())
+	}
 	//proxyUrl, err := url.Parse("http://localhost:8080")
 	//tr := &http.Transport{
 	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -288,7 +292,10 @@ func sendContract(user string, contract content_contract_common.UserContract, re
 	//req, _ = http.NewRequest("POST", url, bytes.NewReader(jsonpPayload))
 	//res, err := client.Do(req)
 	req.Header.Add("content-type", "application/json")
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+	if (err != nil) {
+		fmt.Println(err.Error())
+	}
 
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)

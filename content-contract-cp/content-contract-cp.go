@@ -79,7 +79,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
 	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
-	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 10 * time.Second, adapter)
+	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
 		obcEHClient.Stop()
@@ -200,7 +200,7 @@ func getUserContract(userContractSha string, user string, restAddress string, ch
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"read",
 				Args:[]string{userContractSha}},
-			SecureContext:user},
+			}, //SecureContext:user},
 
 		ID:2}
 
@@ -330,7 +330,7 @@ func createCPContract(userContractForCP content_contract_common.UserContractForC
 			CtorMsg:content_contract_common.CtorMsg{
 				Function:"content-licencing-contract",
 				Args:[]string{string(contractJson)}},
-			SecureContext:user},
+			}, //SecureContext:user},
 		ID:1}
 
 	jsonpPayload, _ := json.Marshal(payload)

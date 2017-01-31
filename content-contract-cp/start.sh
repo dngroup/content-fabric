@@ -12,11 +12,12 @@ fi
 for ((number=1; number<=$1;number++))
 do
 #    docker rm -f cp${number}
-    docker run --name cp${number} -d  \
-       -e PEERADDR=d0ffb689045e4dfeb25fd8df4bafca84-vp0.us.blockchain.ibm.com  \
-       -e EVENT_PORT=31003  \
+    docker run --name cp${number} -d \
+       -e PEERADDR=172.22.0.3  \
+       -e EVENT_PORT=7053  \
        -e CP-ID=cp${number}  \
        -e CHAINCODE=$3  \
        -e PERCENT=$2 \
-       -e dngroup/content-contract-cp
+       --net fabric_default \
+       dngroup/content-contract-cp
 done
