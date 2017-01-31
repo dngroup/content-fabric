@@ -22,3 +22,18 @@ services:
     ports:
       - {{10000+peer*10}}-{{10000+peer*10+3}}:7050-7053
 {% endfor %}
+
+
+{% for te in range(0,te_count): %}
+  te{{ te }}:
+    image: dngroup/content-contract-te
+    command: sh -c "sleep 5  &&  ./content-contract-te -events-address=vp{{ te % peer_count }}:7053 -events-from-chaincode={{ chaincode_id }} -TE-ID=te-{{te}}  -percent={{ te_percent }}  -percent-price={{ te_percent_price }} -rest-address=vp{{ te % peer_count }}:7050"
+{% endfor %}
+
+
+
+{% for cp in range(0,cp_count): %}
+  cp{{ cp }}:
+    image: dngroup/content-contract-cp
+    command: sh -c "sleep 5 && ./content-contract-cp -events-address=vp{{ cp % peer_count }}:7053 -events-from-chaincode={{ chaincode_id }} -CP-ID=cp-{{cp}} -percent={{ cp_percent }} -rest-address=vp{{ cp % peer_count }}:7050"
+{% endfor %}
