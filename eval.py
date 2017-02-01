@@ -145,6 +145,7 @@ try:
     # raw_input()
     print("Waits for the chaincode to be compiled everywhere")
     waitChaincode(PEER_COUNT)
+    print("Waits for the chaincode to be compiled everywhere [DONE]")
 
     gateway = \
         [item["IPAM"]["Config"][0]["Gateway"] for item in cli.networks() if
