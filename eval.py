@@ -27,11 +27,13 @@ CP_COUNT = 10
 TE_PERCENT = 100
 TE_PERCENT_PRICE = 100
 CP_PERCENT = 100
+CONSENSUS="pbft"
 
 parser = argparse.ArgumentParser(description='', epilog=
 """
 """, formatter_class=RawTextHelpFormatter)
-parser.add_argument('--chaincode-id', help='Chaincode id to use', default=CHAIN_CODE_ID)
+parser.add_argument('--chaincode_id', help='Chaincode id to use', default=CHAIN_CODE_ID)
+parser.add_argument('--consensus', help='consensus to use default pbft', default=CHAIN_CODE_ID)
 parser.add_argument('--peer_count', type=int, help='Number of peer (need 3 or more)', default=PEER_COUNT)
 parser.add_argument('--client_count', type=int, help='Number of coming client (need 1 or more)', default=CLIENT_COUNT)
 parser.add_argument('--arrival_time', type=float, help='average time between 2 client', default=ARRIVAL_TIME)
@@ -55,6 +57,7 @@ CP_COUNT = args.cp_count
 TE_PERCENT = args.te_percent
 TE_PERCENT_PRICE = args.te_percent_price
 CP_PERCENT = args.cp_percent
+CONSENSUS=args.consensus
 
 logger = logging.getLogger()
 
@@ -127,7 +130,8 @@ context = {"peer_count": PEER_COUNT,
            "chaincode_id": CHAIN_CODE_ID,
            "te_percent": TE_PERCENT,
            "te_percent_price": TE_PERCENT_PRICE,
-           "cp_percent": CP_PERCENT
+           "cp_percent": CP_PERCENT,
+           "consensus": CONSENSUS
 
            }
 
