@@ -42,7 +42,9 @@ columns = ["peer_count",
            "max",
            "min",
            "mean",
-           "res"]
+           "res",
+           "docker_server_diff",
+           "date"]
 filename = "data.csv"
 
 parser = argparse.ArgumentParser(description='', epilog=
@@ -116,7 +118,8 @@ def launch_user(gateway_addr, port, chaincode):
 
 def waitChaincode(PEER_COUNT):
     number = 0
-    while number != PEER_COUNT:
+    t_end = time() + 60
+    while number != PEER_COUNT and time() < t_end:
         containers = cli.containers(filters={"name": "dev-*"})
         number = len(containers)
         sleep(1)
@@ -161,11 +164,11 @@ try:
     logging.debug("deploying chaincode")
     register_chaincode()
     logging.debug("deploying chaincode [DONE]")
-    print("please press return when chaincode is everywhere")
-    raw_input()
-    # print("Waits for the chaincode to be compiled everywhere")
-    # waitChaincode(PEER_COUNT)
-    # print("Waits for the chaincode to be compiled everywhere [DONE]")
+    # print("please press return when chaincode is everywhere")
+    # raw_input()
+    print("Waits for the chaincode to be compiled everywhere")
+    waitChaincode(PEER_COUNT)
+    print("Waits for the chaincode to be compiled everywhere [DONE]")
 
     gateway = \
         [item["IPAM"]["Config"][0]["Gateway"] for item in cli.networks() if
@@ -186,6 +189,10 @@ try:
     pool = ThreadPool(1000)
     res = pool.map(experiment, zip(10000 + rs.randint(0, PEER_COUNT, CLIENT_COUNT) * 10,
                                    (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
+
+    # get the number of chaincode server online
+    containers = cli.containers(filters={"name": "dev-*"})
+    diffonline = PEER_COUNT-len(containers)
     # save result
     try:
         # load the dataframe if it exists
@@ -194,19 +201,7 @@ try:
         # otherwise, create it
         data = pd.DataFrame(columns=columns)
 
-    columns = ["peer_count",
-               "client_count",
-               "arrival_time",
-               "te_count",
-               "cp_count",
-               "te_percent",
-               "te_percent_price",
-               "cp_percent",
-               "consensus",
-               "max",
-               "min",
-               "mean",
-               "res"]
+
     resAsString=', '.join(str(x) for x in res)
     # create a dataset containing the new data
     data_new = pd.DataFrame(np.array([[PEER_COUNT,
@@ -221,7 +216,9 @@ try:
                                        np.max([x[1][1] for x in res if x[1][1] is not None]),
                                        np.min([x[1][1] for x in res if x[1][1] is not None]),
                                        np.mean([x[1][1] for x in res if x[1][1] is not None]),
-                                       resAsString
+                                       resAsString,
+                                       diffonline,
+                                       time()
                                        ]]),
                             columns=columns)
     # add it to the old one, and save
@@ -233,6 +230,6 @@ try:
     print("mean;%lf" % np.mean([x[1][1] for x in res if x[1][1] is not None]))
     logging.debug("results: %s" % res)
 
-    raw_input()
+    # raw_input()
 finally:
     os.system("docker-compose -f %s down" % TARGET_DOCKER_COMPOSE_FILE)
