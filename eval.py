@@ -10,6 +10,7 @@ from multiprocessing.pool import ThreadPool
 from time import time, sleep
 
 import jinja2
+import pandas as pd
 import requests
 from docker import Client
 
@@ -27,7 +28,22 @@ CP_COUNT = 10
 TE_PERCENT = 100
 TE_PERCENT_PRICE = 100
 CP_PERCENT = 100
-CONSENSUS="pbft"
+CONSENSUS = "pbft"
+
+columns = ["peer_count",
+           "client_count",
+           "arrival_time",
+           "te_count",
+           "cp_count",
+           "te_percent",
+           "te_percent_price",
+           "cp_percent",
+           "consensus",
+           "max",
+           "min",
+           "mean",
+           "res"]
+filename = "data.csv"
 
 parser = argparse.ArgumentParser(description='', epilog=
 """
@@ -57,7 +73,7 @@ CP_COUNT = args.cp_count
 TE_PERCENT = args.te_percent
 TE_PERCENT_PRICE = args.te_percent_price
 CP_PERCENT = args.cp_percent
-CONSENSUS=args.consensus
+CONSENSUS = args.consensus
 
 logger = logging.getLogger()
 
@@ -170,6 +186,48 @@ try:
     pool = ThreadPool(1000)
     res = pool.map(experiment, zip(10000 + rs.randint(0, PEER_COUNT, CLIENT_COUNT) * 10,
                                    (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
+    # save result
+    try:
+        # load the dataframe if it exists
+        data = pd.DataFrame.from_csv(filename)
+    except IOError as e:
+        # otherwise, create it
+        data = pd.DataFrame(columns=columns)
+
+    columns = ["peer_count",
+               "client_count",
+               "arrival_time",
+               "te_count",
+               "cp_count",
+               "te_percent",
+               "te_percent_price",
+               "cp_percent",
+               "consensus",
+               "max",
+               "min",
+               "mean",
+               "res"]
+    resAsString=', '.join(str(x) for x in res)
+    # create a dataset containing the new data
+    data_new = pd.DataFrame(np.array([[PEER_COUNT,
+                                       CLIENT_COUNT,
+                                       ARRIVAL_TIME,
+                                       TE_COUNT,
+                                       CP_COUNT,
+                                       TE_PERCENT,
+                                       TE_PERCENT_PRICE,
+                                       CP_PERCENT,
+                                       CONSENSUS,
+                                       np.max([x[1][1] for x in res if x[1][1] is not None]),
+                                       np.min([x[1][1] for x in res if x[1][1] is not None]),
+                                       np.mean([x[1][1] for x in res if x[1][1] is not None]),
+                                       resAsString
+                                       ]]),
+                            columns=columns)
+    # add it to the old one, and save
+    data = data.append(data_new)
+    data.to_csv(filename)
+
     print("max;%lf" % np.max([x[1][1] for x in res if x[1][1] is not None]))
     print("min;%lf" % np.min([x[1][1] for x in res if x[1][1] is not None]))
     print("mean;%lf" % np.mean([x[1][1] for x in res if x[1][1] is not None]))
