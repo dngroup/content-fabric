@@ -95,6 +95,15 @@ def launch_user(gateway_addr, port, chaincode):
         return -1, None
 
 
+def waitChaincode(PEER_COUNT):
+    number = 0
+    while number != PEER_COUNT:
+        containers = cli.containers(filters={"name": "dev-*"})
+        number = len(containers)
+        sleep(1)
+    return
+
+
 def render(tpl_path, context):
     path, filename = os.path.split(tpl_path)
     return jinja2.Environment(
@@ -132,8 +141,10 @@ try:
     logging.debug("deploying chaincode")
     register_chaincode()
     logging.debug("deploying chaincode [DONE]")
-    print("please press return when chaincode is everywhere")
-    raw_input()
+    # print("please press return when chaincode is everywhere")
+    # raw_input()
+    print("Waits for the chaincode to be compiled everywhere")
+    waitChaincode(PEER_COUNT)
 
     gateway = \
         [item["IPAM"]["Config"][0]["Gateway"] for item in cli.networks() if
