@@ -15,7 +15,9 @@ services:
       - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=pbft
       - CORE_PBFT_GENERAL_N={{ peer_count  }}
 #      - CORE_LOGGING_LEVEL=DEBUG
-
+        {% if peer%2 != 0 %}
+      - CORE_PEER_VALIDATOR_CONSENSUS_ENABLED=false
+        {% endif %}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: sh -c "peer node start "
