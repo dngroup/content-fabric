@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(description='', epilog=
 parser.add_argument('--chaincode-id', help='Chaincode id to use', default=CHAIN_CODE_ID)
 parser.add_argument('--peer_count', type=int, help='Number of peer (need 3 or more)', default=PEER_COUNT)
 parser.add_argument('--client_count', type=int, help='Number of coming client (need 1 or more)', default=CLIENT_COUNT)
-parser.add_argument('--arrival_time', type=int, help='average time between 2 client', default=ARRIVAL_TIME)
+parser.add_argument('--arrival_time', type=float, help='average time between 2 client', default=ARRIVAL_TIME)
 parser.add_argument('--cp_count', type=int, help='Number of Content providers (need 1 or more)', default=CP_COUNT)
 parser.add_argument('--cp_percent', type=int, help='percent of change to have content licensing in a CP',
                     default=CP_PERCENT)
