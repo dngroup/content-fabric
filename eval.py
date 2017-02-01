@@ -10,6 +10,7 @@ from multiprocessing.pool import ThreadPool
 from time import time, sleep
 
 import jinja2
+import pandas as pd
 import requests
 from docker import Client
 
@@ -27,13 +28,30 @@ CP_COUNT = 10
 TE_PERCENT = 100
 TE_PERCENT_PRICE = 100
 CP_PERCENT = 100
-CONSENSUS="pbft"
+CONSENSUS = "pbft"
+
+columns = ["peer_count",
+           "client_count",
+           "arrival_time",
+           "te_count",
+           "cp_count",
+           "te_percent",
+           "te_percent_price",
+           "cp_percent",
+           "consensus",
+           "max",
+           "min",
+           "mean",
+           "res",
+           "docker_server_diff",
+           "date"]
+filename = "data.csv"
 
 parser = argparse.ArgumentParser(description='', epilog=
 """
 """, formatter_class=RawTextHelpFormatter)
 parser.add_argument('--chaincode_id', help='Chaincode id to use', default=CHAIN_CODE_ID)
-parser.add_argument('--consensus', help='consensus to use default pbft', default=CHAIN_CODE_ID)
+parser.add_argument('--consensus', help='consensus to use default pbft', default=CONSENSUS)
 parser.add_argument('--peer_count', type=int, help='Number of peer (need 3 or more)', default=PEER_COUNT)
 parser.add_argument('--client_count', type=int, help='Number of coming client (need 1 or more)', default=CLIENT_COUNT)
 parser.add_argument('--arrival_time', type=float, help='average time between 2 client', default=ARRIVAL_TIME)
@@ -57,7 +75,7 @@ CP_COUNT = args.cp_count
 TE_PERCENT = args.te_percent
 TE_PERCENT_PRICE = args.te_percent_price
 CP_PERCENT = args.cp_percent
-CONSENSUS=args.consensus
+CONSENSUS = args.consensus
 
 logger = logging.getLogger()
 
@@ -100,7 +118,8 @@ def launch_user(gateway_addr, port, chaincode):
 
 def waitChaincode(PEER_COUNT):
     number = 0
-    while number != PEER_COUNT:
+    t_end = time() + 60
+    while number != PEER_COUNT and time() < t_end:
         containers = cli.containers(filters={"name": "dev-*"})
         number = len(containers)
         sleep(1)
@@ -145,11 +164,11 @@ try:
     logging.debug("deploying chaincode")
     register_chaincode()
     logging.debug("deploying chaincode [DONE]")
-    print("please press return when chaincode is everywhere")
-    raw_input()
-    # print("Waits for the chaincode to be compiled everywhere")
-    # waitChaincode(PEER_COUNT)
-    # print("Waits for the chaincode to be compiled everywhere [DONE]")
+    # print("please press return when chaincode is everywhere")
+    # raw_input()
+    print("Waits for the chaincode to be compiled everywhere")
+    waitChaincode(PEER_COUNT)
+    print("Waits for the chaincode to be compiled everywhere [DONE]")
 
     gateway = \
         [item["IPAM"]["Config"][0]["Gateway"] for item in cli.networks() if
@@ -170,11 +189,47 @@ try:
     pool = ThreadPool(1000)
     res = pool.map(experiment, zip(10000 + rs.randint(0, PEER_COUNT, CLIENT_COUNT) * 10,
                                    (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
+
+    # get the number of chaincode server online
+    containers = cli.containers(filters={"name": "dev-*"})
+    diffonline = PEER_COUNT-len(containers)
+    # save result
+    try:
+        # load the dataframe if it exists
+        data = pd.DataFrame.from_csv(filename)
+    except IOError as e:
+        # otherwise, create it
+        data = pd.DataFrame(columns=columns)
+
+
+    resAsString=', '.join(str(x) for x in res)
+    # create a dataset containing the new data
+    data_new = pd.DataFrame(np.array([[PEER_COUNT,
+                                       CLIENT_COUNT,
+                                       ARRIVAL_TIME,
+                                       TE_COUNT,
+                                       CP_COUNT,
+                                       TE_PERCENT,
+                                       TE_PERCENT_PRICE,
+                                       CP_PERCENT,
+                                       CONSENSUS,
+                                       np.max([x[1][1] for x in res if x[1][1] is not None]),
+                                       np.min([x[1][1] for x in res if x[1][1] is not None]),
+                                       np.mean([x[1][1] for x in res if x[1][1] is not None]),
+                                       resAsString,
+                                       diffonline,
+                                       time()
+                                       ]]),
+                            columns=columns)
+    # add it to the old one, and save
+    data = data.append(data_new)
+    data.to_csv(filename)
+
     print("max;%lf" % np.max([x[1][1] for x in res if x[1][1] is not None]))
     print("min;%lf" % np.min([x[1][1] for x in res if x[1][1] is not None]))
     print("mean;%lf" % np.mean([x[1][1] for x in res if x[1][1] is not None]))
     logging.debug("results: %s" % res)
 
-    raw_input()
+    # raw_input()
 finally:
     os.system("docker-compose -f %s down" % TARGET_DOCKER_COMPOSE_FILE)
