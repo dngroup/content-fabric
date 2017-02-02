@@ -246,6 +246,6 @@ try:
         # raw_input()
 finally:
     print "stop docker"
-    raw_input()
+    # raw_input()
     os.system("docker-compose -f %s kill -s 9" % TARGET_DOCKER_COMPOSE_FILE)
     os.system("docker-compose -f %s rm -f" % TARGET_DOCKER_COMPOSE_FILE)
