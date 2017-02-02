@@ -17,6 +17,7 @@ columns = ["peer_count",
            "te_percent_price",
            "cp_percent",
            "consensus",
+           "consensus_time_max"
            "do"
            ]
 filename = "input.csv"
@@ -37,13 +38,22 @@ except IOError as e:
     data = pd.DataFrame(columns=columns)
 
 for index, conf in data.iterrows():
-    print (conf["peer_count"])
-    os.system(
-        "./eval.py --peer_count %d --client_count %d --arrival_time %d --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s" % (
+    # print(conf["do"])
+    if str(conf["do"]) == "True":
+        # print("lala")
+        continue
+    # print (
+    status = os.system(
+        "./eval.py --peer_count %d --client_count %d --arrival_time %.2f --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s --consensus_time_max %s" % (
             conf["peer_count"], conf["client_count"], conf["arrival_time"], conf["te_count"], conf["cp_count"],
             conf["te_percent"],
             conf["te_percent_price"],
             conf["cp_percent"],
-            conf["consensus"]))
-    # conf["do"]="true"
-    # data.to_csv(filename)
+            conf["consensus"],
+            conf["consensus_time_max"]))
+    if os.WEXITSTATUS(status) == 0:
+        data.iloc[index, data.columns.get_loc('do')] = "True"
+        data.to_csv(filename)
+    else:
+        data.iloc[index, data.columns.get_loc('do')] = "Error"
+        data.to_csv(filename)
