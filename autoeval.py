@@ -38,9 +38,8 @@ except IOError as e:
 
 for index, conf in data.iterrows():
     # print (conf["peer_count"])
-    os.system
-    print (
-        "./eval.py --peer_count %d --client_count %d --arrival_time %d --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s" % (
+    os.system(
+        "./eval.py --peer_count %d --client_count %d --arrival_time %.2f --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s" % (
             conf["peer_count"], conf["client_count"], conf["arrival_time"], conf["te_count"], conf["cp_count"],
             conf["te_percent"],
             conf["te_percent_price"],
