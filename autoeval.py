@@ -17,6 +17,7 @@ columns = ["peer_count",
            "te_percent_price",
            "cp_percent",
            "consensus",
+           "consensus_time_max"
            "do"
            ]
 filename = "input.csv"
@@ -37,13 +38,14 @@ except IOError as e:
     data = pd.DataFrame(columns=columns)
 
 for index, conf in data.iterrows():
-    # print (conf["peer_count"])
+    # print (
     os.system(
-        "./eval.py --peer_count %d --client_count %d --arrival_time %.2f --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s" % (
+        "./eval.py --peer_count %d --client_count %d --arrival_time %.2f --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s --consensus_time_max %s" % (
             conf["peer_count"], conf["client_count"], conf["arrival_time"], conf["te_count"], conf["cp_count"],
             conf["te_percent"],
             conf["te_percent_price"],
             conf["cp_percent"],
-            conf["consensus"]))
+            conf["consensus"],
+            conf["consensus_time_max"]))
     # conf["do"]="true"
-    # data.to_csv(filename)
+    data.to_csv(filename)

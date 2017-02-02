@@ -29,6 +29,7 @@ TE_PERCENT = 100
 TE_PERCENT_PRICE = 100
 CP_PERCENT = 100
 CONSENSUS = "pbft"
+CONSENSUS_TIME_MAX = "1s" #100ms
 
 columns = ["peer_count",
            "client_count",
@@ -39,6 +40,7 @@ columns = ["peer_count",
            "te_percent_price",
            "cp_percent",
            "consensus",
+           "consensus_time_max",
            "max",
            "min",
            "mean",
@@ -52,6 +54,7 @@ parser = argparse.ArgumentParser(description='', epilog=
 """, formatter_class=RawTextHelpFormatter)
 parser.add_argument('--chaincode_id', help='Chaincode id to use', default=CHAIN_CODE_ID)
 parser.add_argument('--consensus', help='consensus to use default pbft', default=CONSENSUS)
+parser.add_argument('--consensus_time_max', help='time max before consensus ', default=CONSENSUS_TIME_MAX)
 parser.add_argument('--peer_count', type=int, help='Number of peer (need 3 or more)', default=PEER_COUNT)
 parser.add_argument('--client_count', type=int, help='Number of coming client (need 1 or more)', default=CLIENT_COUNT)
 parser.add_argument('--arrival_time', type=float, help='average time between 2 client', default=ARRIVAL_TIME)
@@ -76,6 +79,7 @@ TE_PERCENT = args.te_percent
 TE_PERCENT_PRICE = args.te_percent_price
 CP_PERCENT = args.cp_percent
 CONSENSUS = args.consensus
+CONSENSUS_TIME_MAX = args.consensus_time_max
 
 logger = logging.getLogger()
 
@@ -150,8 +154,8 @@ context = {"peer_count": PEER_COUNT,
            "te_percent": TE_PERCENT,
            "te_percent_price": TE_PERCENT_PRICE,
            "cp_percent": CP_PERCENT,
-           "consensus": CONSENSUS
-
+           "consensus": CONSENSUS,
+           "consensus_time_max": CONSENSUS_TIME_MAX
            }
 
 with open(TARGET_DOCKER_COMPOSE_FILE, "w") as f:
@@ -192,7 +196,7 @@ try:
 
     # get the number of chaincode server online
     containers = cli.containers(filters={"name": "dev-*"})
-    diffonline = PEER_COUNT-len(containers)
+    diffonline = PEER_COUNT - len(containers)
     # save result
     try:
         # load the dataframe if it exists
@@ -201,8 +205,7 @@ try:
         # otherwise, create it
         data = pd.DataFrame(columns=columns)
 
-
-    resAsString=', '.join(str(x) for x in res)
+    resAsString = ', '.join(str(x) for x in res)
     # create a dataset containing the new data
     data_new = pd.DataFrame(np.array([[PEER_COUNT,
                                        CLIENT_COUNT,
@@ -213,6 +216,7 @@ try:
                                        TE_PERCENT_PRICE,
                                        CP_PERCENT,
                                        CONSENSUS,
+                                       CONSENSUS_TIME_MAX,
                                        np.max([x[1][1] for x in res if x[1][1] is not None]),
                                        np.min([x[1][1] for x in res if x[1][1] is not None]),
                                        np.mean([x[1][1] for x in res if x[1][1] is not None]),
