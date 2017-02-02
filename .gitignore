@@ -138,3 +138,6 @@ fabric.properties
 /content-contract-te/content-contract-te
 /content-contract-cc/content-contract-cc
 activity.log*
+docker-compose.cooked.yml
+eval.log
+input.csv
