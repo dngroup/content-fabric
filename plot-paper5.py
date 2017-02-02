@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -31,7 +32,7 @@ for y in range(len(Y)):
 
 Zvalue = np.vectorize(Zvalue)
 Z=Zvalue(X,Y)
-surf = ax.plot_wireframe(X, Y, Z,  linewidth=1)
+surf = ax.plot_wireframe(X, Y, Z, cmap=cm.jet, rstride=1, cstride=1)
 ax.set_xlabel('TE/CP Count')
 ax.set_ylabel('client count')
 ax.set_zlabel('contract convergeance time')
