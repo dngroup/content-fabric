@@ -127,6 +127,8 @@ def waitChaincode(PEER_COUNT):
         containers = cli.containers(filters={"name": "dev-*"})
         number = len(containers)
         sleep(1)
+    if time()>t_end:
+        logging.error("Not all chainecode is deployed")
     return
 
 
