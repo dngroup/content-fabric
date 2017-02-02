@@ -66,7 +66,7 @@ func createEventClient(eventAddress string, listenToRejections bool, cid string)
 
 	done := make(chan *pb.Event_Block)
 	reject := make(chan *pb.Event_Rejection)
-	adapter := &adapter{notfy: done, rejected: reject, listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
+	adapter := &adapter{notfy: done, rejected: reject,listenToRejections: listenToRejections, chaincodeID: cid, cEvent: make(chan *pb.Event_ChaincodeEvent)}
 	obcEHClient, _ = consumer.NewEventsClient(eventAddress, 5, adapter)
 	if err := obcEHClient.Start(); err != nil {
 		fmt.Printf("could not start chat %s\n", err)
@@ -94,6 +94,8 @@ func main() {
 	flag.StringVar(&eventAddress, "events-address", "0.0.0.0:7053", "address of events server")
 	flag.Parse()
 
+
+	//time.Sleep(5000*time.Millisecond)
 	contract := createContract(userId, contentId, timeMax)
 
 	response := sendContract(contract, restAddress, chaincodeID)
@@ -103,10 +105,13 @@ func main() {
 
 	//Create a listener to wait for the 1st contract
 	a := createEventClient(eventAddress, false, chaincodeID)
+	for a == nil && time.Now().Unix() < contract.TimestampMax  {
+		a = createEventClient(eventAddress, false, chaincodeID)
+		fmt.Printf("err")
+	}
 	for time.Now().Unix() < contract.TimestampMax + 1 {
 		fmt.Printf("-")
 		select {
-
 		case <-a.notfy:
 			break
 		case <-a.rejected:

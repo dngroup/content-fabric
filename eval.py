@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-
 import argparse
 import logging
-import numpy as np
 import os
+import sys
 from argparse import RawTextHelpFormatter
 from logging.handlers import RotatingFileHandler
 from multiprocessing.pool import ThreadPool
 from time import time, sleep
 
 import jinja2
+import numpy as np
 import pandas as pd
 import requests
 from docker import Client
@@ -28,9 +28,8 @@ CP_COUNT = 10
 TE_PERCENT = 100
 TE_PERCENT_PRICE = 100
 CP_PERCENT = 100
-CONSENSUS = "pbft"
-CONSENSUS_TIME_MAX = "100ms" #100ms
-
+CONSENSUS = "noops"
+CONSENSUS_TIME_MAX = "100ms"  # 100ms
 
 columns = ["peer_count",
            "client_count",
@@ -100,17 +99,23 @@ steam_handler.setLevel(logging.DEBUG)
 logger.addHandler(steam_handler)
 
 
-def launch_user(gateway_addr, port, chaincode):
+def launch_user(networkName, vpnumber, chaincode):
     try:
 
         # docker run --net contentfabric_default -it -e USERID=lala -e CONTENTID=bbb.mp4 -e TIMEMAX=30  -e PEERADDR=172.20.0.14 -e EVENT_PORT=7053 -e REST_PORT=7050  -e CHAINCODE=fb35eb0071ba47fdcf7ce76359e9f9e4c847a74d8bf0187c1a79ce3468322d378530ca9fc6aefb9c7b074c3d423dfb664142e0c0a3d905a173f4fce253f67372   -e USER=user_type1_0 dngroup/content-contract-user
+
+        networking_config = cli.create_networking_config({
+            networkName: cli.create_endpoint_config()
+        })
+
         container = cli.create_container(image='dngroup/content-contract-user',
-                                         environment={"PEERADDR": "%s" % (gateway_addr),
-                                                      "EVENT_PORT": "%d" % (port + 3),
-                                                      "REST_PORT": "%d" % (port),
+                                         environment={"PEERADDR": "vp%s" % (vpnumber),
+                                                      # "EVENT_PORT": "%d" % (vpnumber + 3),
+                                                      # "REST_PORT": "%d" % (vpnumber),
                                                       "CHAINCODE": chaincode,
                                                       "TIMEMAX": 30
-                                                      }
+                                                      },networking_config=networking_config
+
                                          )
         start = time()
         cli.start(container=container.get("Id"))
@@ -128,7 +133,7 @@ def waitChaincode(PEER_COUNT):
         containers = cli.containers(filters={"name": "dev-*"})
         number = len(containers)
         sleep(1)
-    if time()>t_end:
+    if time() > t_end:
         logging.error("Not all chainecode is deployed")
     return
 
@@ -163,7 +168,7 @@ context = {"peer_count": PEER_COUNT,
 
 with open(TARGET_DOCKER_COMPOSE_FILE, "w") as f:
     f.write(render("./docker-compose.yml.tpl", context))
-
+# raw_input()
 try:
     os.system("docker-compose -f %s up -d " % TARGET_DOCKER_COMPOSE_FILE)
     logging.debug("waiting for the dockers to launch")
@@ -187,14 +192,14 @@ try:
 
 
     def experiment(args):
-        random_port, timer = args
+        random_vp, timer = args
         sleep(timer)
         logging.debug("launching user %d" % timer)
-        return timer, launch_user(gateway, random_port, CHAIN_CODE_ID)
+        return timer, launch_user(DOCKER_COMPOSE_NETWORK_NAME, random_vp, CHAIN_CODE_ID)
 
 
     pool = ThreadPool(1000)
-    res = pool.map(experiment, zip(10000 + rs.randint(0, PEER_COUNT, CLIENT_COUNT) * 10,
+    res = pool.map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT),
                                    (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
 
     # get the number of chaincode server online
@@ -236,8 +241,11 @@ try:
     print("min;%lf" % np.min([x[1][1] for x in res if x[1][1] is not None]))
     print("mean;%lf" % np.mean([x[1][1] for x in res if x[1][1] is not None]))
     logging.debug("results: %s" % res)
-    if str(res).find("None") >0 :
-        exit -2;
-    # raw_input()
+    if str(res).find("None") > 0:
+        sys.exit(-2)
+        # raw_input()
 finally:
-    os.system("docker-compose -f %s down" % TARGET_DOCKER_COMPOSE_FILE)
+    print "stop docker"
+    raw_input()
+    os.system("docker-compose -f %s kill -s 9" % TARGET_DOCKER_COMPOSE_FILE)
+    os.system("docker-compose -f %s rm -f" % TARGET_DOCKER_COMPOSE_FILE)
