@@ -37,8 +37,9 @@ except IOError as e:
     data = pd.DataFrame(columns=columns)
 
 for index, conf in data.iterrows():
-    print (conf["peer_count"])
-    os.system(
+    # print (conf["peer_count"])
+    os.system
+    print (
         "./eval.py --peer_count %d --client_count %d --arrival_time %d --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s" % (
             conf["peer_count"], conf["client_count"], conf["arrival_time"], conf["te_count"], conf["cp_count"],
             conf["te_percent"],
