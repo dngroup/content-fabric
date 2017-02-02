@@ -108,7 +108,7 @@ def launch_user(networkName, vpnumber, chaincode):
             networkName: cli.create_endpoint_config()
         })
 
-        container = cli.create_container(image='dngroup/content-contract-user',
+        container = cli.create_container(image='dngroup/content-contract-user:reconect',
                                          environment={"PEERADDR": "vp%s" % (vpnumber),
                                                       # "EVENT_PORT": "%d" % (vpnumber + 3),
                                                       # "REST_PORT": "%d" % (vpnumber),
