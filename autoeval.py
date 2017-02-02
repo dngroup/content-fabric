@@ -17,7 +17,7 @@ columns = ["peer_count",
            "te_percent_price",
            "cp_percent",
            "consensus",
-           "consensus_time_max"
+           "consensus_time_max",
            "do"
            ]
 filename = "input.csv"
@@ -36,7 +36,7 @@ try:
 except IOError as e:
     # otherwise, create it
     data = pd.DataFrame(columns=columns)
-
+i=0
 for index, conf in data.iterrows():
     # print(conf["do"])
     if str(conf["do"]) == "True":
@@ -52,8 +52,12 @@ for index, conf in data.iterrows():
             conf["consensus"],
             conf["consensus_time_max"]))
     if os.WEXITSTATUS(status) == 0:
-        data.iloc[index, data.columns.get_loc('do')] = "True"
+        data.iloc[i, data.columns.get_loc('do')] = "True"
+        data.to_csv(filename)
+    elif os.WEXITSTATUS(status) == -2:
+        data.iloc[i, data.columns.get_loc('do')] = "Error"
         data.to_csv(filename)
     else:
-        data.iloc[index, data.columns.get_loc('do')] = "Error"
+        data.iloc[i, data.columns.get_loc('do')] = "Error_Total"
         data.to_csv(filename)
+    i+=1

@@ -29,7 +29,8 @@ TE_PERCENT = 100
 TE_PERCENT_PRICE = 100
 CP_PERCENT = 100
 CONSENSUS = "pbft"
-CONSENSUS_TIME_MAX = "1s" #100ms
+CONSENSUS_TIME_MAX = "100ms" #100ms
+
 
 columns = ["peer_count",
            "client_count",
@@ -235,7 +236,8 @@ try:
     print("min;%lf" % np.min([x[1][1] for x in res if x[1][1] is not None]))
     print("mean;%lf" % np.mean([x[1][1] for x in res if x[1][1] is not None]))
     logging.debug("results: %s" % res)
-
+    if str(res).find("None") >0 :
+        exit -2;
     # raw_input()
 finally:
     os.system("docker-compose -f %s down" % TARGET_DOCKER_COMPOSE_FILE)
