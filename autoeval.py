@@ -61,5 +61,5 @@ for index, conf in data.iterrows():
         data.iloc[i, data.columns.get_loc('do')] = "Error_Total"
         data.to_csv(filename)
     i+=1
-    os.system("docker rm $(docker ps - a - q)")
+    os.system("docker rm $(docker ps -a -q)")
 
