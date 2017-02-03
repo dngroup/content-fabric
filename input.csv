@@ -1,16 +1,11 @@
 ,peer_count,client_count,arrival_time,te_count,cp_count,te_percent,te_percent_price,cp_percent,consensus,consensus_time_max,do
-0,4,1,60.0,1,10,100,100,100, noops , 100ms,True
-0,7,1,60.0,1,10,100,100,100, noops , 100ms,True
-0,10,1,60.0,1,10,100,100,100, noops , 100ms,True
-0,4,1,60.0,2,10,100,100,100, noops , 100ms,True
-0,7,1,60.0,2,10,100,100,100, noops , 100ms,True
-0,10,1,60.0,2,10,100,100,100, noops , 100ms,True
-0,4,1,60.0,7,10,100,100,100, noops , 100ms, False
-0,7,1,60.0,7,10,100,100,100, noops , 100ms, False
-0,10,1,60.0,7,10,100,100,100, noops , 100ms, False
-0,4,1,60.0,18,10,100,100,100, noops , 100ms, False
-0,7,1,60.0,18,10,100,100,100, noops , 100ms, False
-0,10,1,60.0,18,10,100,100,100, noops , 100ms, False
-0,4,1,60.0,49,10,100,100,100, noops , 100ms, False
-0,7,1,60.0,49,10,100,100,100, noops , 100ms, False
-0,10,1,60.0,49,10,100,100,100, noops , 100ms, False
+0,4 ,6 , 10.00, 5 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,6 , 10.00, 49 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,10 , 5.62, 5 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,10 , 5.62, 49 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,18 , 3.16, 5 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,18 , 3.16, 49 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,33 , 1.78, 5 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,33 , 1.78, 49 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,60 , 1.00, 5 ,10 , 100 , 100 , 100 , noops , 100ms, False
+0,4 ,60 , 1.00, 49 ,10 , 100 , 100 , 100 , noops , 100ms, False
