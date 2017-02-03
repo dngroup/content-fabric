@@ -51,4 +51,4 @@ for index, conf in data.iterrows():
             conf["cp_percent"],
             conf["consensus"],
             conf["consensus_time_max"]))
-
+    print("sudo service docker restart")
