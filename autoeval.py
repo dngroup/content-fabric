@@ -42,8 +42,8 @@ for index, conf in data.iterrows():
     if str(conf["do"]) == "True":
         # print("lala")
         continue
-    # print (
-    status = os.system(
+    print (
+    #status = os.system(
         "./eval.py --peer_count %d --client_count %d --arrival_time %.2f --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s --consensus_time_max %s" % (
             conf["peer_count"], conf["client_count"], conf["arrival_time"], conf["te_count"], conf["cp_count"],
             conf["te_percent"],
@@ -51,15 +51,4 @@ for index, conf in data.iterrows():
             conf["cp_percent"],
             conf["consensus"],
             conf["consensus_time_max"]))
-    if os.WEXITSTATUS(status) == 0:
-        data.iloc[i, data.columns.get_loc('do')] = "True"
-        data.to_csv(filename)
-    elif os.WEXITSTATUS(status) == -2:
-        data.iloc[i, data.columns.get_loc('do')] = "Error"
-        data.to_csv(filename)
-    else:
-        data.iloc[i, data.columns.get_loc('do')] = "Error_Total"
-        data.to_csv(filename)
-    i+=1
-    os.system("docker rm $(docker ps -a -q)")
 
