@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import argparse
 import logging
 import os
@@ -114,7 +114,7 @@ def launch_user(networkName, vpnumber, chaincode):
                                                       # "REST_PORT": "%d" % (vpnumber),
                                                       "CHAINCODE": chaincode,
                                                       "TIMEMAX": 30
-                                                      },networking_config=networking_config
+                                                      }, networking_config=networking_config
 
                                          )
         start = time()
@@ -199,8 +199,8 @@ try:
 
 
     pool = ThreadPool(1000)
-    res = pool.map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT),
-                                   (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
+    res = pool.map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT),(np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
+    #map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT), (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
 
     # get the number of chaincode server online
     containers = cli.containers(filters={"name": "dev-*"})
@@ -237,10 +237,6 @@ try:
     data = data.append(data_new)
     data.to_csv(filename)
 
-    print("max;%lf" % np.max([x[1][1] for x in res if x[1][1] is not None]))
-    print("min;%lf" % np.min([x[1][1] for x in res if x[1][1] is not None]))
-    print("mean;%lf" % np.mean([x[1][1] for x in res if x[1][1] is not None]))
-    logging.debug("results: %s" % res)
     if str(res).find("None") > 0:
         sys.exit(-2)
         # raw_input()
