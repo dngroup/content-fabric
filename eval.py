@@ -171,7 +171,11 @@ with open(TARGET_DOCKER_COMPOSE_FILE, "w") as f:
     f.write(render("./docker-compose.yml.tpl", context))
 
 
+<<<<<<< HEAD
 if not no_run:
+=======
+if not args.no_run:
+>>>>>>> d45bbb7524a7ba6f60b588d0563cb5c05c760ecf
     try:
         os.system("docker-compose -f %s up -d " % TARGET_DOCKER_COMPOSE_FILE)
         logging.debug("waiting for the dockers to launch")
