@@ -66,6 +66,7 @@ parser.add_argument('--te_percent', type=int, help='percent of change to have co
 parser.add_argument('--te_percent_price', type=int,
                     help='percent of change to a better price thant the max price fixed by the CP',
                     default=TE_PERCENT_PRICE)
+parser.add_argument('--run',action='store_true')
 
 args = parser.parse_args()
 

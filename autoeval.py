@@ -42,6 +42,7 @@ for index, conf in data.iterrows():
     if str(conf["do"]) == "True":
         # print("lala")
         continue
+    print("sudo service docker restart")
     print (
     #status = os.system(
         "./eval.py --peer_count %d --client_count %d --arrival_time %.2f --te_count %d --cp_count %d --te_percent %d --te_percent_price %d --cp_percent %d --consensus %s --consensus_time_max %s" % (
@@ -51,4 +52,3 @@ for index, conf in data.iterrows():
             conf["cp_percent"],
             conf["consensus"],
             conf["consensus_time_max"]))
-    print("sudo service docker restart")

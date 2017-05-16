@@ -14,20 +14,18 @@ services:
       - CORE_VM_ENDPOINT=unix:///var/run/docker.sock
       - CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN={{ consensus  }}
       - CORE_PBFT_GENERAL_N={{ peer_count  }}
+      - CORE_PBFT_GENERAL_BATCHSIZE={{ batch_size }}
       - CORE_NOOPS_BLOCK_WAIT={{ consensus_time_max }}
       - CORE_PBFT_GENERAL_TIMEOUT_BATCH={{ consensus_time_max }}
-      {% if peer%2 != 0 %}
-      - CORE_PEER_VALIDATOR_CONSENSUS_ENABLED=false
-      {% endif %}
 #      - CORE_LOGGING_LEVEL=DEBUG
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     {% if peer == 0 %}
-    command: sh -c "peer node start"
+    command: sh -c "peer node start -v"
     {% else %}
     depends_on:
         - vp0
-    command: sh -c "sleep 2 && peer node start"
+    command: sh -c "sleep 2 && peer node start -v"
     {% endif %}
     ports:
       - {{10000+peer*10}}-{{10000+peer*10+3}}:7050-7053
