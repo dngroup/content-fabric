@@ -30,6 +30,7 @@ TE_PERCENT_PRICE = 100
 CP_PERCENT = 100
 CONSENSUS = "noops"
 CONSENSUS_TIME_MAX = "100ms"  # 100ms
+BATCH_SIZE=500
 
 columns = ["peer_count",
            "client_count",
@@ -41,6 +42,7 @@ columns = ["peer_count",
            "cp_percent",
            "consensus",
            "consensus_time_max",
+           "batch_size",
            "max",
            "min",
            "mean",
@@ -66,6 +68,7 @@ parser.add_argument('--te_percent', type=int, help='percent of change to have co
 parser.add_argument('--te_percent_price', type=int,
                     help='percent of change to a better price thant the max price fixed by the CP',
                     default=TE_PERCENT_PRICE)
+parser.add_argument('--batch_size', type=int, help='size of the batch for the pbft algo', default=500)
 parser.add_argument('--no_run',action='store_false')
 
 args = parser.parse_args()
@@ -81,7 +84,7 @@ TE_PERCENT_PRICE = args.te_percent_price
 CP_PERCENT = args.cp_percent
 CONSENSUS = args.consensus
 CONSENSUS_TIME_MAX = args.consensus_time_max
-
+BATCH_SIZE=args.batch_size
 logger = logging.getLogger()
 
 logger.setLevel(logging.DEBUG)
@@ -164,7 +167,8 @@ context = {"peer_count": PEER_COUNT,
            "te_percent_price": TE_PERCENT_PRICE,
            "cp_percent": CP_PERCENT,
            "consensus": CONSENSUS,
-           "consensus_time_max": CONSENSUS_TIME_MAX
+           "consensus_time_max": CONSENSUS_TIME_MAX,
+           "batch_size": BATCH_SIZE
            }
 
 with open(TARGET_DOCKER_COMPOSE_FILE, "w") as f:
@@ -205,7 +209,7 @@ if not args.no_run:
             return timer, launch_user(DOCKER_COMPOSE_NETWORK_NAME, random_vp, CHAIN_CODE_ID)
 
 
-        pool = ThreadPool(1000)
+        pool = ThreadPool(100)
         res = pool.map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT),(np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
         #map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT), (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
 
@@ -232,6 +236,7 @@ if not args.no_run:
                                            CP_PERCENT,
                                            CONSENSUS,
                                            CONSENSUS_TIME_MAX,
+                                           BATCH_SIZE,
                                            np.max([x[1][1] for x in res if x[1][1] is not None]),
                                            np.min([x[1][1] for x in res if x[1][1] is not None]),
                                            np.mean([x[1][1] for x in res if x[1][1] is not None]),
