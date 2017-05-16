@@ -66,7 +66,7 @@ parser.add_argument('--te_percent', type=int, help='percent of change to have co
 parser.add_argument('--te_percent_price', type=int,
                     help='percent of change to a better price thant the max price fixed by the CP',
                     default=TE_PERCENT_PRICE)
-parser.add_argument('--run',action='store_true')
+parser.add_argument('--no_run',action='store_false')
 
 args = parser.parse_args()
 
@@ -169,80 +169,82 @@ context = {"peer_count": PEER_COUNT,
 
 with open(TARGET_DOCKER_COMPOSE_FILE, "w") as f:
     f.write(render("./docker-compose.yml.tpl", context))
-# raw_input()
-try:
-    os.system("docker-compose -f %s up -d " % TARGET_DOCKER_COMPOSE_FILE)
-    logging.debug("waiting for the dockers to launch")
-    sleep(3)
-    logging.debug("deploying chaincode")
-    register_chaincode()
-    logging.debug("deploying chaincode [DONE]")
-    # print("please press return when chaincode is everywhere")
-    # raw_input()
-    print("Waits for the chaincode to be compiled everywhere")
-    waitChaincode(PEER_COUNT)
-    print("Waits for the chaincode to be compiled everywhere [DONE]")
-
-    gateway = \
-        [item["IPAM"]["Config"][0]["Gateway"] for item in cli.networks() if
-         item["Name"] == DOCKER_COMPOSE_NETWORK_NAME][0]
-
-    closures = []
-
-    rs = np.random.RandomState(1)
 
 
-    def experiment(args):
-        random_vp, timer = args
-        sleep(timer)
-        logging.debug("launching user %d" % timer)
-        return timer, launch_user(DOCKER_COMPOSE_NETWORK_NAME, random_vp, CHAIN_CODE_ID)
-
-
-    pool = ThreadPool(1000)
-    res = pool.map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT),(np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
-    #map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT), (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
-
-    # get the number of chaincode server online
-    containers = cli.containers(filters={"name": "dev-*"})
-    diffonline = PEER_COUNT - len(containers)
-    # save result
+if not no_run:
     try:
-        # load the dataframe if it exists
-        data = pd.DataFrame.from_csv(filename)
-    except IOError as e:
-        # otherwise, create it
-        data = pd.DataFrame(columns=columns)
-
-    resAsString = ', '.join(str(x) for x in res)
-    # create a dataset containing the new data
-    data_new = pd.DataFrame(np.array([[PEER_COUNT,
-                                       CLIENT_COUNT,
-                                       ARRIVAL_TIME,
-                                       TE_COUNT,
-                                       CP_COUNT,
-                                       TE_PERCENT,
-                                       TE_PERCENT_PRICE,
-                                       CP_PERCENT,
-                                       CONSENSUS,
-                                       CONSENSUS_TIME_MAX,
-                                       np.max([x[1][1] for x in res if x[1][1] is not None]),
-                                       np.min([x[1][1] for x in res if x[1][1] is not None]),
-                                       np.mean([x[1][1] for x in res if x[1][1] is not None]),
-                                       resAsString,
-                                       diffonline,
-                                       time()
-                                       ]]),
-                            columns=columns)
-    # add it to the old one, and save
-    data = data.append(data_new)
-    data.to_csv(filename)
-
-    if str(res).find("None") > 0:
-        sys.exit(-2)
+        os.system("docker-compose -f %s up -d " % TARGET_DOCKER_COMPOSE_FILE)
+        logging.debug("waiting for the dockers to launch")
+        sleep(3)
+        logging.debug("deploying chaincode")
+        register_chaincode()
+        logging.debug("deploying chaincode [DONE]")
+        # print("please press return when chaincode is everywhere")
         # raw_input()
-finally:
-    print "stop docker"
-    # raw_input()
-    os.system("docker-compose -f %s kill -s 9" % TARGET_DOCKER_COMPOSE_FILE)
-    os.system("docker-compose -f %s rm -f" % TARGET_DOCKER_COMPOSE_FILE)
+        print("Waits for the chaincode to be compiled everywhere")
+        waitChaincode(PEER_COUNT)
+        print("Waits for the chaincode to be compiled everywhere [DONE]")
+
+        gateway = \
+            [item["IPAM"]["Config"][0]["Gateway"] for item in cli.networks() if
+             item["Name"] == DOCKER_COMPOSE_NETWORK_NAME][0]
+
+        closures = []
+
+        rs = np.random.RandomState(1)
+
+
+        def experiment(args):
+            random_vp, timer = args
+            sleep(timer)
+            logging.debug("launching user %d" % timer)
+            return timer, launch_user(DOCKER_COMPOSE_NETWORK_NAME, random_vp, CHAIN_CODE_ID)
+
+
+        pool = ThreadPool(1000)
+        res = pool.map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT),(np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
+        #map(experiment, zip(rs.randint(0, PEER_COUNT, CLIENT_COUNT), (np.cumsum(rs.poisson(ARRIVAL_TIME, CLIENT_COUNT)))))
+
+        # get the number of chaincode server online
+        containers = cli.containers(filters={"name": "dev-*"})
+        diffonline = PEER_COUNT - len(containers)
+        # save result
+        try:
+            # load the dataframe if it exists
+            data = pd.DataFrame.from_csv(filename)
+        except IOError as e:
+            # otherwise, create it
+            data = pd.DataFrame(columns=columns)
+
+        resAsString = ', '.join(str(x) for x in res)
+        # create a dataset containing the new data
+        data_new = pd.DataFrame(np.array([[PEER_COUNT,
+                                           CLIENT_COUNT,
+                                           ARRIVAL_TIME,
+                                           TE_COUNT,
+                                           CP_COUNT,
+                                           TE_PERCENT,
+                                           TE_PERCENT_PRICE,
+                                           CP_PERCENT,
+                                           CONSENSUS,
+                                           CONSENSUS_TIME_MAX,
+                                           np.max([x[1][1] for x in res if x[1][1] is not None]),
+                                           np.min([x[1][1] for x in res if x[1][1] is not None]),
+                                           np.mean([x[1][1] for x in res if x[1][1] is not None]),
+                                           resAsString,
+                                           diffonline,
+                                           time()
+                                           ]]),
+                                columns=columns)
+        # add it to the old one, and save
+        data = data.append(data_new)
+        data.to_csv(filename)
+
+        if str(res).find("None") > 0:
+            sys.exit(-2)
+            # raw_input()
+    finally:
+        print "stop docker"
+        # raw_input()
+        os.system("docker-compose -f %s kill -s 9" % TARGET_DOCKER_COMPOSE_FILE)
+        os.system("docker-compose -f %s rm -f" % TARGET_DOCKER_COMPOSE_FILE)
