@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-
+from scipy import interpolate
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -11,14 +11,16 @@ dir(Axes3D)
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--axis1', default="te_count")
-parser.add_argument('--axis2', default="client_count")
-parser.add_argument('--axis3', default="min")
+parser.add_argument('--axis1', default="consensus_time_max")
+parser.add_argument('--axis2', default="batch_size")
+parser.add_argument('--axis3', default="mean")
+parser.add_argument('--resolution', default=80,type=int)
 
 args = parser.parse_args()
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
+
 
 data = pd.DataFrame.from_csv("data.csv")
 
@@ -35,14 +37,35 @@ def Zvalue(a, b, ax1, ax2, ax3):
     if len(v) == 0:
         return np.nan
     else:
-        return v[0]
+        return np.mean(v)
 
 
 Zvalue = np.vectorize(Zvalue)
 Z = Zvalue(X, Y, args.axis1, args.axis2, args.axis3)
-surf = ax.plot_wireframe(X, Y, Z, cmap=cm.jet, rstride=1, cstride=1)
+
+
+#smoothing
+
+
+#xnew, ynew = np.mgrid[1:39:80j, 1:79:80j]
+xnew, ynew = np.mgrid[np.min(X):np.max(X):args.resolution*1j, np.min(Y):np.max(Y):args.resolution*1j]
+tck = interpolate.bisplrep(X, Y, Z, s=0)
+znew = interpolate.bisplev(xnew[:,0], ynew[0,:], tck)
+
+ax = fig.gca(projection='3d')
+ax.plot_surface(xnew, ynew, znew, cmap='summer', rstride=1, cstride=1, alpha=None, antialiased=True)
+
+
+
+#ax = fig.gca(projection='3d')
+#ax.plot_surface(xnew, ynew, znew, cmap='summer', rstride=1, cstride=1, alpha=None, antialiased=True)
+
+
+#surf = ax.plot_wireframe(X, Y, Z,  cmap='summer', rstride=1, cstride=1, alpha=None, antialiased=True)
+#ax.plot_surface(xnew, ynew, znew, cmap='summer', rstride=1, cstride=1, alpha=None, antialiased=True)
 ax.set_xlabel(args.axis1)
 ax.set_ylabel(args.axis2)
 ax.set_zlabel(args.axis3)
 
 plt.show()
+#plt.savefig('foo%03d.png'%args.resolution, bbox_inches='tight')
