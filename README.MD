@@ -41,6 +41,12 @@ dngroup/content-contract-te     latest              df3db7b135ba        3 months
 nherbaut/fabric-peer            latest              21cb00fb27f4        7 months ago        1.42 GB
 
 ```
+
+then  do
+```
+sudo docker pull dngroup/fabric-baseimage:latest
+sudo docker tag dngroup/fabric-baseimage:latest hyperledger/fabric-baseimage:latest
+```
 ## Install
 
  We need docker and docker-compose 
