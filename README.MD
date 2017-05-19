@@ -29,7 +29,18 @@ texttable==0.8.1
 urllib3==1.13.1
 websocket-client==0.18.0
 ```
+## docker images prerequisites
 
+pull the following images
+
+```
+REPOSITORY                      TAG                 IMAGE ID            CREATED             SIZE
+dngroup/content-contract-user   latest              cc451b6df2f6        3 months ago        16.3 MB
+dngroup/content-contract-cp     latest              465c57f9bf38        3 months ago        16.3 MB
+dngroup/content-contract-te     latest              df3db7b135ba        3 months ago        16.3 MB
+nherbaut/fabric-peer            latest              21cb00fb27f4        7 months ago        1.42 GB
+
+```
 ## Install
 
  We need docker and docker-compose 
