@@ -31,6 +31,7 @@ CP_PERCENT = 100
 CONSENSUS = "noops"
 CONSENSUS_TIME_MAX = "100ms"  # 100ms
 BATCH_SIZE=500
+VP_DELAY=20
 
 columns = ["peer_count",
            "client_count",
@@ -70,6 +71,7 @@ parser.add_argument('--te_percent_price', type=int,
                     default=TE_PERCENT_PRICE)
 parser.add_argument('--batch_size', type=int, help='size of the batch for the pbft algo', default=500)
 parser.add_argument('--no_run',action='store_true')
+parser.add_argument('--vp_delay',type=int,help="the delay added through tc to the vp", default=20)
 
 args = parser.parse_args()
 
@@ -85,6 +87,7 @@ CP_PERCENT = args.cp_percent
 CONSENSUS = args.consensus
 CONSENSUS_TIME_MAX = args.consensus_time_max
 BATCH_SIZE=args.batch_size
+VP_DELAY=args.vp_delay
 logger = logging.getLogger()
 
 logger.setLevel(logging.DEBUG)
@@ -168,7 +171,9 @@ context = {"peer_count": PEER_COUNT,
            "cp_percent": CP_PERCENT,
            "consensus": CONSENSUS,
            "consensus_time_max": CONSENSUS_TIME_MAX,
-           "batch_size": BATCH_SIZE
+           "batch_size": BATCH_SIZE,
+           "vp_delay": VP_DELAY
+
            }
 
 with open(TARGET_DOCKER_COMPOSE_FILE, "w") as f:

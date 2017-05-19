@@ -5,6 +5,7 @@ services:
 
   vp{{ peer}}:
     image: hyperledger/fabric-peer
+    privileged: true
     environment:
       - CORE_PEER_ID=vp{{ peer }}
       {% if peer != 0 %}
@@ -21,11 +22,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     {% if peer == 0 %}
-    command: sh -c "peer node start -v"
+    command: sh -c "tc qdisc add dev eth0 root netem delay {{ vp_delay }}ms && peer node start "
     {% else %}
     depends_on:
         - vp0
-    command: sh -c "sleep 2 && peer node start -v"
+    command: sh -c "sleep 2 && tc qdisc add dev eth0 root netem delay {{vp_delay}}ms && peer node start "
     {% endif %}
     ports:
       - {{10000+peer*10}}-{{10000+peer*10+3}}:7050-7053
@@ -35,6 +36,7 @@ services:
 {% for te in range(0,te_count): %}
   te{{ te }}:
     image: dngroup/content-contract-te
+    privileged: true
     depends_on:
     {% for peer in range(0,peer_count): %}
         - vp{{ peer }}
@@ -43,7 +45,7 @@ services:
     #{% if te != 0 %}
     #    - te{{ te-1 }}
     #{% endif %}
-    command: sh -c "sleep 5  &&  ./content-contract-te -events-address=vp{{ te % peer_count }}:7053 -events-from-chaincode={{ chaincode_id }} -TE-ID=te-{{te}}  -percent={{ te_percent }}  -percent-price={{ te_percent_price }} -rest-address=vp{{ te % peer_count }}:7050"
+    command: sh -c "sleep 5  &&  ./content-contract-te -events-address=vp{{ te % peer_count }}:7053 -events-from-chaincode={{ chaincode_id }} -TE-ID=te-{{te}}  -percent={{ te_percent }}  -percent-price={{ te_percent_price }} -rest-address=vp{{ te % peer_count }}:7050 "
 {% endfor %}
 
 
@@ -51,9 +53,10 @@ services:
 {% for cp in range(0,cp_count): %}
   cp{{ cp }}:
     image: dngroup/content-contract-cp
+    privileged: true
     depends_on:
     {% for peer in range(0,peer_count): %}
         - vp{{ peer }}
     {% endfor %}
-    command: sh -c "sleep 5 && ./content-contract-cp -events-address=vp{{ cp % peer_count }}:7053 -events-from-chaincode={{ chaincode_id }} -CP-ID=cp-{{cp}} -percent={{ cp_percent }} -rest-address=vp{{ cp % peer_count }}:7050"
+    command: sh -c "sleep 5 && ./content-contract-cp -events-address=vp{{ cp % peer_count }}:7053 -events-from-chaincode={{ chaincode_id }} -CP-ID=cp-{{cp}} -percent={{ cp_percent }} -rest-address=vp{{ cp % peer_count }}:7050 "
 {% endfor %}
